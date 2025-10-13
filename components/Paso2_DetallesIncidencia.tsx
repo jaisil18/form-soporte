@@ -1,0 +1,505 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
+import { getOpcionesFormulario } from '@/lib/supabase';
+import type { UsuarioSoporte, FormularioData, OpcionesFormulario } from '@/types';
+
+interface Paso2DetallesIncidenciaProps {
+  usuario: UsuarioSoporte | null;
+  datosFormulario: Partial<FormularioData>;
+  onActualizarDatos: (datos: Partial<FormularioData>) => void;
+  onAnterior: () => void;
+  onEnviar: () => void;
+  cargando: boolean;
+}
+
+export default function Paso2DetallesIncidencia({
+  usuario,
+  datosFormulario,
+  onActualizarDatos,
+  onAnterior,
+  onEnviar,
+  cargando
+}: Paso2DetallesIncidenciaProps) {
+  const [opciones, setOpciones] = useState<OpcionesFormulario | null>(null);
+  const [dropdownsAbiertos, setDropdownsAbiertos] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const cargarOpciones = async () => {
+      try {
+        const opcionesData = await getOpcionesFormulario();
+        setOpciones(opcionesData);
+      } catch (error) {
+        console.error('Error al cargar opciones:', error);
+      }
+    };
+
+    cargarOpciones();
+  }, []);
+
+  const toggleDropdown = (campo: string) => {
+    setDropdownsAbiertos(prev => ({
+      ...prev,
+      [campo]: !prev[campo]
+    }));
+  };
+
+  const handleSeleccionar = (campo: string, valor: string) => {
+    console.log(`📝 Seleccionando ${campo}:`, valor);
+    
+    const nuevosDatos: Partial<FormularioData> = { [campo]: valor };
+    
+    // Si se cambia la sede, limpiar pabellón y campos dependientes
+    if (campo === 'sede') {
+      console.log('🔄 Cambio de sede detectado, limpiando campos dependientes');
+      nuevosDatos.pabellon = undefined;
+      nuevosDatos.ambiente_incidencia = undefined;
+      nuevosDatos.tipo_incidencia = undefined;
+      nuevosDatos.equipo_afectado = undefined;
+    }
+    
+    // Si se cambia el pabellón, limpiar ambiente
+    if (campo === 'pabellon') {
+      console.log('🔄 Cambio de pabellón detectado, limpiando ambiente');
+      nuevosDatos.ambiente_incidencia = undefined;
+    }
+    
+    // Si se cambia el tipo de actividad, limpiar campos de incidencia
+    if (campo === 'tipo_actividad') {
+      console.log('🔄 Cambio de tipo de actividad detectado:', valor);
+      if (valor !== 'Incidencia') {
+        console.log('⚠️ No es "Incidencia", limpiando campos específicos de incidencia');
+        nuevosDatos.ambiente_incidencia = undefined;
+        nuevosDatos.tipo_incidencia = undefined;
+        nuevosDatos.equipo_afectado = undefined;
+      } else {
+        console.log('✅ Es "Incidencia", manteniendo campos específicos');
+      }
+    }
+    
+    // Si se cambia el tipo de incidencia, limpiar equipo
+    if (campo === 'tipo_incidencia') {
+      console.log('🔄 Cambio de tipo de incidencia detectado, limpiando equipo');
+      nuevosDatos.equipo_afectado = undefined;
+    }
+    
+    console.log('📤 Datos actualizados:', nuevosDatos);
+    onActualizarDatos(nuevosDatos);
+    setDropdownsAbiertos(prev => ({ ...prev, [campo]: false }));
+  };
+
+  const esIncidencia = datosFormulario.tipo_actividad === 'Incidencia';
+  const esActividadEspecial = ['Mudanza', 'Visita técnica/campo', 'Soporte evento'].includes(datosFormulario.tipo_actividad || '');
+
+  // Solo mostrar campos de incidencia si se ha seleccionado "Incidencia" como tipo de actividad
+  const mostrarCamposIncidencia = esIncidencia;
+  
+  // Determinar si la sede seleccionada tiene pabellones
+  const sedeTienePabellones = opciones && datosFormulario.sede && 
+    opciones.pabellones[datosFormulario.sede] && 
+    opciones.pabellones[datosFormulario.sede].length > 0;
+
+  const validarFormulario = () => {
+    const camposObligatorios = ['sede', 'tipo_actividad', 'tiempo_aproximado'];
+    
+    // Solo requerir pabellón si la sede tiene pabellones
+    if (sedeTienePabellones) {
+      camposObligatorios.push('pabellon');
+    }
+    
+    if (mostrarCamposIncidencia) {
+      camposObligatorios.push('ambiente_incidencia', 'tipo_incidencia', 'equipo_afectado');
+    }
+
+    // Logs detallados para debugging
+    console.log('🔍 VALIDACIÓN DEL FORMULARIO');
+    console.log('👤 Usuario:', usuario?.nombre_completo);
+    console.log('📋 Datos actuales:', datosFormulario);
+    console.log('✅ Sede tiene pabellones:', sedeTienePabellones);
+    console.log('🔧 Mostrar campos de incidencia:', mostrarCamposIncidencia);
+    console.log('📝 Campos obligatorios:', camposObligatorios);
+    
+    const camposFaltantes = camposObligatorios.filter(campo => !datosFormulario[campo as keyof FormularioData]);
+    if (camposFaltantes.length > 0) {
+      console.log('❌ Campos faltantes:', camposFaltantes);
+      console.log('📊 Estado por campo:');
+      camposObligatorios.forEach(campo => {
+        const valor = datosFormulario[campo as keyof FormularioData];
+        console.log(`   ${campo}: ${valor ? '✅ Lleno' : '❌ Vacío'} (${valor || 'sin valor'})`);
+      });
+    } else {
+      console.log('✅ Todos los campos obligatorios están llenos');
+    }
+
+    return camposObligatorios.every(campo => datosFormulario[campo as keyof FormularioData]);
+  };
+
+  const obtenerOpcionesEquipo = () => {
+    if (!opciones || !datosFormulario.tipo_incidencia) return [];
+    return opciones.equipos[datosFormulario.tipo_incidencia] || [];
+  };
+
+  const obtenerOpcionesAmbiente = () => {
+    if (!opciones) return [];
+    
+    // Si la sede tiene pabellones, usar el pabellón seleccionado
+    if (sedeTienePabellones && datosFormulario.pabellon) {
+      return opciones.ambientes[datosFormulario.pabellon] || [];
+    }
+    
+    // Si la sede no tiene pabellones, mostrar todos los ambientes disponibles
+    if (!sedeTienePabellones) {
+      const todosLosAmbientes = Object.values(opciones.ambientes).flat();
+      return [...new Set(todosLosAmbientes)]; // Eliminar duplicados
+    }
+    
+    return [];
+  };
+
+  if (!opciones) {
+    return (
+      <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando opciones del formulario...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-2xl p-8">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Detalles de la Incidencia
+        </h2>
+        
+        <p className="text-gray-600">
+          <strong>Hola, {usuario?.nombre_completo}.</strong> Complete los siguientes campos para registrar la incidencia.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {/* 1. Sede */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            1. Sede <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => toggleDropdown('sede')}
+              className="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <span className={datosFormulario.sede ? 'text-gray-900' : 'text-gray-500'}>
+                  {datosFormulario.sede || 'Seleccione una sede'}
+                </span>
+                <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${
+                  dropdownsAbiertos.sede ? 'rotate-180' : ''
+                }`} />
+              </div>
+            </button>
+
+            {dropdownsAbiertos.sede && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {opciones.sedes.map((sede) => (
+                  <button
+                    key={sede}
+                    type="button"
+                    onClick={() => handleSeleccionar('sede', sede)}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    {sede}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 2. Pabellón (solo si la sede tiene pabellones) */}
+        {sedeTienePabellones && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              2. Pabellón <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => toggleDropdown('pabellon')}
+                disabled={!datosFormulario.sede}
+                className="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center justify-between">
+                  <span className={datosFormulario.pabellon ? 'text-gray-900' : 'text-gray-500'}>
+                    {datosFormulario.pabellon || 'Seleccione un pabellón'}
+                  </span>
+                  <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${
+                    dropdownsAbiertos.pabellon ? 'rotate-180' : ''
+                  }`} />
+                </div>
+              </button>
+
+              {dropdownsAbiertos.pabellon && datosFormulario.sede && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  {(opciones.pabellones[datosFormulario.sede] || []).map((pabellon) => (
+                    <button
+                      key={pabellon}
+                      type="button"
+                      onClick={() => handleSeleccionar('pabellon', pabellon)}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      {pabellon}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tipo de Actividad */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {sedeTienePabellones ? '3. Tipo de Actividad' : '2. Tipo de Actividad'} <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => toggleDropdown('tipo_actividad')}
+              className="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <span className={datosFormulario.tipo_actividad ? 'text-gray-900' : 'text-gray-500'}>
+                  {datosFormulario.tipo_actividad || 'Seleccione el tipo de actividad'}
+                </span>
+                <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${
+                  dropdownsAbiertos.tipo_actividad ? 'rotate-180' : ''
+                }`} />
+              </div>
+            </button>
+
+            {dropdownsAbiertos.tipo_actividad && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {opciones.tipos_actividad.map((tipo) => (
+                  <button
+                    key={tipo}
+                    type="button"
+                    onClick={() => handleSeleccionar('tipo_actividad', tipo)}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    {tipo}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Mensaje especial para actividades que saltan campos */}
+          {esActividadEspecial && (
+            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                ⚠️ Al seleccionar &quot;{datosFormulario.tipo_actividad}&quot;, el formulario saltará directamente al tiempo aproximado.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Ambiente (solo si es Incidencia) */}
+        {mostrarCamposIncidencia && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {sedeTienePabellones ? '4. Ambiente de la Incidencia' : '3. Ambiente de la Incidencia'} <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => toggleDropdown('ambiente_incidencia')}
+                disabled={!!(sedeTienePabellones && !datosFormulario.pabellon)}
+                className="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center justify-between">
+                  <span className={datosFormulario.ambiente_incidencia ? 'text-gray-900' : 'text-gray-500'}>
+                    {datosFormulario.ambiente_incidencia || 'Seleccione el ambiente'}
+                  </span>
+                  <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${
+                    dropdownsAbiertos.ambiente_incidencia ? 'rotate-180' : ''
+                  }`} />
+                </div>
+              </button>
+
+              {dropdownsAbiertos.ambiente_incidencia && (sedeTienePabellones ? datosFormulario.pabellon : true) && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  {obtenerOpcionesAmbiente().map((ambiente) => (
+                    <button
+                      key={ambiente}
+                      type="button"
+                      onClick={() => handleSeleccionar('ambiente_incidencia', ambiente)}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      {ambiente}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 5. Tipo de Incidencia (solo si es Incidencia) */}
+        {mostrarCamposIncidencia && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {sedeTienePabellones ? '5. Tipo de Incidencia' : '4. Tipo de Incidencia'} <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => toggleDropdown('tipo_incidencia')}
+                className="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <span className={datosFormulario.tipo_incidencia ? 'text-gray-900' : 'text-gray-500'}>
+                    {datosFormulario.tipo_incidencia || 'Seleccione el tipo de incidencia'}
+                  </span>
+                  <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${
+                    dropdownsAbiertos.tipo_incidencia ? 'rotate-180' : ''
+                  }`} />
+                </div>
+              </button>
+
+              {dropdownsAbiertos.tipo_incidencia && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  {opciones.tipos_incidencia.map((tipo) => (
+                    <button
+                      key={tipo}
+                      type="button"
+                      onClick={() => handleSeleccionar('tipo_incidencia', tipo)}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      {tipo}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 6. Equipo o Recurso Tecnológico (solo si es Incidencia) */}
+        {mostrarCamposIncidencia && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {sedeTienePabellones ? '6. Equipo o Recurso Tecnológico' : '5. Equipo o Recurso Tecnológico'} <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => toggleDropdown('equipo_afectado')}
+                disabled={!datosFormulario.tipo_incidencia}
+                className="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center justify-between">
+                  <span className={datosFormulario.equipo_afectado ? 'text-gray-900' : 'text-gray-500'}>
+                    {datosFormulario.equipo_afectado || 'Seleccione el equipo afectado'}
+                  </span>
+                  <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${
+                    dropdownsAbiertos.equipo_afectado ? 'rotate-180' : ''
+                  }`} />
+                </div>
+              </button>
+
+              {dropdownsAbiertos.equipo_afectado && datosFormulario.tipo_incidencia && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  {obtenerOpcionesEquipo().map((equipo) => (
+                    <button
+                      key={equipo}
+                      type="button"
+                      onClick={() => handleSeleccionar('equipo_afectado', equipo)}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      {equipo}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tiempo Aproximado */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {mostrarCamposIncidencia ? (sedeTienePabellones ? '7' : '6') : (sedeTienePabellones ? '4' : '3')}. Tiempo Aproximado de la Actividad <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => toggleDropdown('tiempo_aproximado')}
+              className="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <span className={datosFormulario.tiempo_aproximado ? 'text-gray-900' : 'text-gray-500'}>
+                  {datosFormulario.tiempo_aproximado || 'Seleccione el tiempo aproximado'}
+                </span>
+                <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${
+                  dropdownsAbiertos.tiempo_aproximado ? 'rotate-180' : ''
+                }`} />
+              </div>
+            </button>
+
+            {dropdownsAbiertos.tiempo_aproximado && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {opciones.tiempos_aproximados.map((tiempo) => (
+                  <button
+                    key={tiempo}
+                    type="button"
+                    onClick={() => handleSeleccionar('tiempo_aproximado', tiempo)}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    {tiempo}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Botones de navegación */}
+      <div className="flex justify-between mt-8">
+        <button
+          onClick={onAnterior}
+          className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-colors duration-200"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span>Anterior</span>
+        </button>
+
+        <button
+          onClick={onEnviar}
+          disabled={!validarFormulario() || cargando}
+          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+            validarFormulario() && !cargando
+              ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          {cargando ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>Enviando...</span>
+            </>
+          ) : (
+            <>
+              <span>Enviar Formulario</span>
+              <ArrowRight className="h-5 w-5" />
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
