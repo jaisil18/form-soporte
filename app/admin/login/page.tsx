@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LogIn, Settings, Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
@@ -60,7 +60,7 @@ function AdminLoginContent() {
           // Intentar redirección con router primero
           try {
             router.push(redirectTo);
-          } catch (error) {
+          } catch (_error) {
             console.log('❌ Error con router.push, usando window.location');
             window.location.href = redirectTo;
           }

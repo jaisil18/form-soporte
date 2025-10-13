@@ -62,7 +62,7 @@ export const validarHorario = async (): Promise<ResultadoValidacionHorario> => {
     const ahora = new Date();
     const horaPeru = toZonedTime(ahora, ZONA_HORARIA_PERU);
     const horaActual = horaPeru.getHours();
-    const minutoActual = horaPeru.getMinutes();
+    // const minutoActual = horaPeru.getMinutes(); // No se usa actualmente
     
     const horaActualStr = horaPeru.toLocaleTimeString('es-PE', {
       hour: '2-digit',

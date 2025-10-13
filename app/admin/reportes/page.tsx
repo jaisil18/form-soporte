@@ -28,7 +28,7 @@ export default function ReportesPage() {
 
   useEffect(() => {
     cargarDatos();
-  }, [filtros]);
+  }, [filtros, cargarDatos]);
 
   const cargarDatos = async () => {
     try {

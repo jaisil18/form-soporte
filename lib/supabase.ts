@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import type { 
   UsuarioSoporte, 
   Incidencia, 
-  ConfiguracionSistema, 
   FormularioData,
   HorarioConfiguracion,
   OpcionesFormulario,
@@ -257,7 +256,7 @@ export const createUsuarioAdminConSignup = async (datos: {
   rol?: string;
 }): Promise<UsuarioAdmin> => {
   // Crear el usuario usando signup normal (requiere email confirmation)
-  const { data: authData, error: authError } = await supabase.auth.signUp({
+  const { error: authError } = await supabase.auth.signUp({
     email: datos.email,
     password: datos.password,
     options: {
@@ -307,7 +306,7 @@ export const updateUsuarioAdmin = async (id: string, datos: Partial<{
   return data;
 };
 
-export const updatePasswordAdmin = async (email: string, newPassword: string): Promise<void> => {
+export const updatePasswordAdmin = async (email: string, _newPassword: string): Promise<void> => {
   // Método alternativo: actualizar solo en nuestra tabla personalizada
   // El usuario deberá cambiar su contraseña manualmente en Supabase Auth
   const { error } = await supabase

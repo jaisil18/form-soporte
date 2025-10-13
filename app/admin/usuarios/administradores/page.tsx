@@ -18,11 +18,9 @@ import {
   getUsuariosAdmin, 
   createUsuarioAdmin, 
   updateUsuarioAdmin, 
-  updatePasswordAdmin,
   desactivarUsuarioAdmin,
   activarUsuarioAdmin
 } from '@/lib/supabase';
-import { obtenerIniciales } from '@/lib/utils';
 import type { UsuarioAdmin } from '@/types';
 
 export default function AdministradoresPage() {
