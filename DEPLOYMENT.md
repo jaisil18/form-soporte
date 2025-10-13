@@ -14,9 +14,14 @@
 En el dashboard de Vercel, ve a **Settings > Environment Variables** y agrega:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://flmudobluiyzllvgrwhs.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsbXVkb2JsdWl5emxsdmdyd2hzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzNjEzMzcsImV4cCI6MjA3NTkzNzMzN30.UnoJlCpU4xZgFFCTmvEYHhf9AmIZ2WwgaoemWVjpT4o
+NEXT_PUBLIC_SUPABASE_URL = https://flmudobluiyzllvgrwhs.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsbXVkb2JsdWl5emxsdmdyd2hzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzNjEzMzcsImV4cCI6MjA3NTkzNzMzN30.UnoJlCpU4xZgFFCTmvEYHhf9AmIZ2WwgaoemWVjpT4o
 ```
+
+**⚠️ IMPORTANTE**: 
+- Marca ambas variables para **Production**, **Preview** y **Development**
+- Sin estas variables, el build fallará con el error "supabaseUrl is required"
+- El proyecto ya incluye valores por defecto como respaldo
 
 ### 3. Configuración de Build
 
