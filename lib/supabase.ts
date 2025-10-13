@@ -306,7 +306,7 @@ export const updateUsuarioAdmin = async (id: string, datos: Partial<{
   return data;
 };
 
-export const updatePasswordAdmin = async (email: string, _newPassword: string): Promise<void> => {
+export const updatePasswordAdmin = async (email: string): Promise<void> => {
   // Método alternativo: actualizar solo en nuestra tabla personalizada
   // El usuario deberá cambiar su contraseña manualmente en Supabase Auth
   const { error } = await supabase

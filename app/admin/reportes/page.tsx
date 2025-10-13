@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
@@ -26,11 +26,7 @@ export default function ReportesPage() {
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [busqueda, setBusqueda] = useState('');
 
-  useEffect(() => {
-    cargarDatos();
-  }, [filtros, cargarDatos]);
-
-  const cargarDatos = async () => {
+  const cargarDatos = useCallback(async () => {
     try {
       setCargando(true);
       const [incidenciasData, estadisticasData] = await Promise.all([
@@ -45,7 +41,11 @@ export default function ReportesPage() {
     } finally {
       setCargando(false);
     }
-  };
+  }, [filtros]);
+
+  useEffect(() => {
+    cargarDatos();
+  }, [cargarDatos]);
 
   const handleExportarIncidencias = () => {
     exportarIncidenciasExcel(incidencias);

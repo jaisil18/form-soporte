@@ -60,7 +60,7 @@ function AdminLoginContent() {
           // Intentar redirección con router primero
           try {
             router.push(redirectTo);
-          } catch (_error) {
+          } catch {
             console.log('❌ Error con router.push, usando window.location');
             window.location.href = redirectTo;
           }
