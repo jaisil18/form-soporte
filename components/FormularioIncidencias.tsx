@@ -127,6 +127,13 @@ export default function FormularioIncidencias({ onVolver }: FormularioIncidencia
     onVolver();
   };
 
+  const handleRegistrarOtraIncidencia = () => {
+    setEnviado(false);
+    setPasoActual(1);
+    setUsuarioSeleccionado(null);
+    setDatosFormulario({});
+  };
+
   if (enviado) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center">
@@ -154,7 +161,7 @@ export default function FormularioIncidencias({ onVolver }: FormularioIncidencia
               </button>
               
               <button
-                onClick={() => setEnviado(false)}
+                onClick={handleRegistrarOtraIncidencia}
                 className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
               >
                 Registrar Otra Incidencia
