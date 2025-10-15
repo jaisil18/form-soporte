@@ -43,6 +43,12 @@ export default function FormularioIncidencias({ onVolver }: FormularioIncidencia
 
   const handleSeleccionarUsuario = (usuario: UsuarioSoporte) => {
     setUsuarioSeleccionado(usuario);
+    // Inicializar los datos del formulario con la información del usuario
+    setDatosFormulario({
+      usuario_id: usuario.id,
+      usuario_nombre: usuario.nombre_completo,
+      usuario_email: usuario.email
+    });
   };
 
   const handleActualizarDatos = (datos: Partial<FormularioData>) => {

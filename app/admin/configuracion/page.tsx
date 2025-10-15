@@ -64,10 +64,28 @@ export default function ConfiguracionPage() {
       if (!prev) return null;
 
       if (Array.isArray(prev[seccion])) {
-        return {
+        const nuevasOpciones = {
           ...prev,
           [seccion]: [...(prev[seccion] as string[]), item]
         };
+
+        // Si se agrega una nueva sede, crear automáticamente su entrada en pabellones
+        if (seccion === 'sedes') {
+          nuevasOpciones.pabellones = {
+            ...prev.pabellones,
+            [item]: prev.pabellones[item] || [] // Solo crear si no existe
+          };
+        }
+
+        // Si se agrega un nuevo tipo de incidencia, crear automáticamente su entrada en equipos
+        if (seccion === 'tipos_incidencia') {
+          nuevasOpciones.equipos = {
+            ...prev.equipos,
+            [item]: prev.equipos[item] || [] // Solo crear si no existe
+          };
+        }
+
+        return nuevasOpciones;
       }
 
       return prev;
@@ -81,10 +99,28 @@ export default function ConfiguracionPage() {
       if (!prev) return null;
 
       if (Array.isArray(prev[seccion])) {
-        return {
+        const itemAEliminar = (prev[seccion] as string[])[index];
+        
+        const nuevasOpciones = {
           ...prev,
           [seccion]: (prev[seccion] as string[]).filter((_, i) => i !== index)
         };
+
+        // Si se elimina una sede, eliminar también su entrada en pabellones
+        if (seccion === 'sedes') {
+          const nuevosPabellones = { ...prev.pabellones };
+          delete nuevosPabellones[itemAEliminar];
+          nuevasOpciones.pabellones = nuevosPabellones;
+        }
+
+        // Si se elimina un tipo de incidencia, eliminar también su entrada en equipos
+        if (seccion === 'tipos_incidencia') {
+          const nuevosEquipos = { ...prev.equipos };
+          delete nuevosEquipos[itemAEliminar];
+          nuevasOpciones.equipos = nuevosEquipos;
+        }
+
+        return nuevasOpciones;
       }
 
       return prev;
@@ -102,6 +138,11 @@ export default function ConfiguracionPage() {
         pabellones: {
           ...prev.pabellones,
           [sede]: [...(prev.pabellones[sede] || []), pabellon]
+        },
+        // Crear automáticamente una entrada vacía en ambientes para el nuevo pabellón
+        ambientes: {
+          ...prev.ambientes,
+          [pabellon]: prev.ambientes[pabellon] || [] // Solo crear si no existe
         }
       };
     });
@@ -113,12 +154,18 @@ export default function ConfiguracionPage() {
     setOpcionesEditadas(prev => {
       if (!prev) return null;
 
+      const pabellonAEliminar = prev.pabellones[sede][index];
+      const nuevosAmbientes = { ...prev.ambientes };
+      delete nuevosAmbientes[pabellonAEliminar];
+
       return {
         ...prev,
         pabellones: {
           ...prev.pabellones,
           [sede]: prev.pabellones[sede].filter((_, i) => i !== index)
-        }
+        },
+        // Eliminar también la entrada correspondiente en ambientes
+        ambientes: nuevosAmbientes
       };
     });
   };
@@ -329,7 +376,7 @@ export default function ConfiguracionPage() {
                     <button
                       onClick={(e) => {
                         const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
-                        if (input.value.trim()) {
+                        if (input && input.value && input.value.trim()) {
                           agregarItem('sedes', input.value.trim());
                           input.value = '';
                         }
@@ -382,7 +429,7 @@ export default function ConfiguracionPage() {
                           <button
                             onClick={(e) => {
                               const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
-                              if (input.value.trim()) {
+                              if (input && input.value && input.value.trim()) {
                                 agregarPabellon(sede, input.value.trim());
                                 input.value = '';
                               }
@@ -434,7 +481,7 @@ export default function ConfiguracionPage() {
                     <button
                       onClick={(e) => {
                         const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
-                        if (input.value.trim()) {
+                        if (input && input.value && input.value.trim()) {
                           agregarItem('tipos_actividad', input.value.trim());
                           input.value = '';
                         }
@@ -487,7 +534,7 @@ export default function ConfiguracionPage() {
                           <button
                             onClick={(e) => {
                               const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
-                              if (input.value.trim()) {
+                              if (input && input.value && input.value.trim()) {
                                 agregarAmbiente(pabellon, input.value.trim());
                                 input.value = '';
                               }
@@ -539,7 +586,7 @@ export default function ConfiguracionPage() {
                     <button
                       onClick={(e) => {
                         const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
-                        if (input.value.trim()) {
+                        if (input && input.value && input.value.trim()) {
                           agregarItem('tipos_incidencia', input.value.trim());
                           input.value = '';
                         }
@@ -592,7 +639,7 @@ export default function ConfiguracionPage() {
                           <button
                             onClick={(e) => {
                               const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
-                              if (input.value.trim()) {
+                              if (input && input.value && input.value.trim()) {
                                 agregarEquipo(tipoIncidencia, input.value.trim());
                                 input.value = '';
                               }
@@ -644,7 +691,7 @@ export default function ConfiguracionPage() {
                     <button
                       onClick={(e) => {
                         const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
-                        if (input.value.trim()) {
+                        if (input && input.value && input.value.trim()) {
                           agregarItem('tiempos_aproximados', input.value.trim());
                           input.value = '';
                         }

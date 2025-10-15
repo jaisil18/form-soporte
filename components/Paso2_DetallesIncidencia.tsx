@@ -100,6 +100,13 @@ export default function Paso2DetallesIncidencia({
     opciones.pabellones[datosFormulario.sede] && 
     opciones.pabellones[datosFormulario.sede].length > 0;
 
+  // Debug solo cuando los datos cambien significativamente
+  useEffect(() => {
+    if (opciones) { // Solo debug cuando las opciones estén cargadas
+      debugValidacion();
+    }
+  }, [datosFormulario.sede, datosFormulario.tipo_actividad, datosFormulario.tiempo_aproximado, sedeTienePabellones, mostrarCamposIncidencia]);
+
   const validarFormulario = () => {
     const camposObligatorios = ['sede', 'tipo_actividad', 'tiempo_aproximado'];
     
@@ -112,7 +119,21 @@ export default function Paso2DetallesIncidencia({
       camposObligatorios.push('ambiente_incidencia', 'tipo_incidencia', 'equipo_afectado');
     }
 
-    // Logs detallados para debugging
+    return camposObligatorios.every(campo => datosFormulario[campo as keyof FormularioData]);
+  };
+
+  // Función separada para logging de debug (solo cuando sea necesario)
+  const debugValidacion = () => {
+    const camposObligatorios = ['sede', 'tipo_actividad', 'tiempo_aproximado'];
+    
+    if (sedeTienePabellones) {
+      camposObligatorios.push('pabellon');
+    }
+    
+    if (mostrarCamposIncidencia) {
+      camposObligatorios.push('ambiente_incidencia', 'tipo_incidencia', 'equipo_afectado');
+    }
+
     console.log('🔍 VALIDACIÓN DEL FORMULARIO');
     console.log('👤 Usuario:', usuario?.nombre_completo);
     console.log('📋 Datos actuales:', datosFormulario);
@@ -131,8 +152,6 @@ export default function Paso2DetallesIncidencia({
     } else {
       console.log('✅ Todos los campos obligatorios están llenos');
     }
-
-    return camposObligatorios.every(campo => datosFormulario[campo as keyof FormularioData]);
   };
 
   const obtenerOpcionesEquipo = () => {
@@ -141,19 +160,47 @@ export default function Paso2DetallesIncidencia({
   };
 
   const obtenerOpcionesAmbiente = () => {
-    if (!opciones) return [];
+    console.log('🔍 DEBUG obtenerOpcionesAmbiente:');
+    console.log('   - opciones:', opciones);
+    console.log('   - sedeTienePabellones:', sedeTienePabellones);
+    console.log('   - pabellon seleccionado:', datosFormulario.pabellon);
+    
+    if (!opciones) {
+      console.log('   ❌ No hay opciones cargadas');
+      return [];
+    }
     
     // Si la sede tiene pabellones, usar el pabellón seleccionado
     if (sedeTienePabellones && datosFormulario.pabellon) {
-      return opciones.ambientes[datosFormulario.pabellon] || [];
+      console.log('   🔍 Buscando ambientes para pabellón:', datosFormulario.pabellon);
+      console.log('   🔍 opciones.ambientes:', opciones.ambientes);
+      console.log('   🔍 opciones.ambientes[pabellon]:', opciones.ambientes[datosFormulario.pabellon]);
+      
+      let ambientes = opciones.ambientes[datosFormulario.pabellon];
+      
+      // Si no hay ambientes específicos para este pabellón, usar ambientes por defecto
+      if (!ambientes || ambientes.length === 0) {
+        console.log('   ⚠️ No hay ambientes específicos para este pabellón, usando ambientes por defecto');
+        // Obtener todos los ambientes únicos disponibles en el sistema
+        const todosLosAmbientes = Object.values(opciones.ambientes).flat();
+        ambientes = [...new Set(todosLosAmbientes)]; // Eliminar duplicados
+        console.log('   🔄 Ambientes por defecto encontrados:', ambientes);
+      }
+      
+      console.log('   ✅ Ambientes finales:', ambientes);
+      return ambientes || [];
     }
     
     // Si la sede no tiene pabellones, mostrar todos los ambientes disponibles
     if (!sedeTienePabellones) {
+      console.log('   🔍 Sede sin pabellones, obteniendo todos los ambientes');
       const todosLosAmbientes = Object.values(opciones.ambientes).flat();
-      return [...new Set(todosLosAmbientes)]; // Eliminar duplicados
+      const ambientesUnicos = [...new Set(todosLosAmbientes)]; // Eliminar duplicados
+      console.log('   ✅ Todos los ambientes:', ambientesUnicos);
+      return ambientesUnicos;
     }
     
+    console.log('   ❌ No se encontraron ambientes');
     return [];
   };
 

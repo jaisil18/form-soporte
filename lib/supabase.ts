@@ -129,6 +129,8 @@ export const setConfiguracion = async (clave: string, valor: unknown, descripcio
       valor,
       descripcion,
       updated_at: new Date().toISOString()
+    }, {
+      onConflict: 'clave'
     });
 
   if (error) throw error;
