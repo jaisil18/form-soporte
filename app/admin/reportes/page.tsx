@@ -85,7 +85,7 @@ export default function ReportesPage() {
 
   const handleExportarEstadisticas = () => {
     if (estadisticas) {
-      exportarEstadisticasExcel(estadisticas as Record<string, unknown>);
+      exportarEstadisticasExcel(estadisticas as unknown as Record<string, unknown>);
     }
   };
 

@@ -16,7 +16,6 @@ import { getOpcionesFormulario, updateOpcionesFormulario } from '@/lib/supabase'
 import type { OpcionesFormulario } from '@/types';
 
 export default function ConfiguracionPage() {
-  const [opciones, setOpciones] = useState<OpcionesFormulario | null>(null);
   const [opcionesEditadas, setOpcionesEditadas] = useState<OpcionesFormulario | null>(null);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -29,7 +28,6 @@ export default function ConfiguracionPage() {
   const cargarOpciones = async () => {
     try {
       const opcionesData = await getOpcionesFormulario();
-      setOpciones(opcionesData);
       setOpcionesEditadas(opcionesData);
     } catch (error) {
       console.error('Error al cargar opciones:', error);
@@ -44,7 +42,6 @@ export default function ConfiguracionPage() {
     try {
       setGuardando(true);
       await updateOpcionesFormulario(opcionesEditadas);
-      setOpciones(opcionesEditadas);
       alert('Configuración guardada exitosamente');
     } catch (error) {
       console.error('Error al guardar:', error);

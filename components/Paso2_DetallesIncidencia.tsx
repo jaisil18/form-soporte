@@ -100,28 +100,6 @@ export default function Paso2DetallesIncidencia({
     opciones.pabellones[datosFormulario.sede] && 
     opciones.pabellones[datosFormulario.sede].length > 0;
 
-  // Debug solo cuando los datos cambien significativamente
-  useEffect(() => {
-    if (opciones) { // Solo debug cuando las opciones estén cargadas
-      debugValidacion();
-    }
-  }, [datosFormulario.sede, datosFormulario.tipo_actividad, datosFormulario.tiempo_aproximado, sedeTienePabellones, mostrarCamposIncidencia, debugValidacion, opciones]);
-
-  const validarFormulario = () => {
-    const camposObligatorios = ['sede', 'tipo_actividad', 'tiempo_aproximado'];
-    
-    // Solo requerir pabellón si la sede tiene pabellones
-    if (sedeTienePabellones) {
-      camposObligatorios.push('pabellon');
-    }
-    
-    if (mostrarCamposIncidencia) {
-      camposObligatorios.push('ambiente_incidencia', 'tipo_incidencia', 'equipo_afectado');
-    }
-
-    return camposObligatorios.every(campo => datosFormulario[campo as keyof FormularioData]);
-  };
-
   // Función separada para logging de debug (solo cuando sea necesario)
   const debugValidacion = useCallback(() => {
     const camposObligatorios = ['sede', 'tipo_actividad', 'tiempo_aproximado'];
@@ -153,6 +131,28 @@ export default function Paso2DetallesIncidencia({
       console.log('✅ Todos los campos obligatorios están llenos');
     }
   }, [datosFormulario, sedeTienePabellones, mostrarCamposIncidencia, usuario]);
+
+  // Debug solo cuando los datos cambien significativamente
+  useEffect(() => {
+    if (opciones) { // Solo debug cuando las opciones estén cargadas
+      debugValidacion();
+    }
+  }, [datosFormulario.sede, datosFormulario.tipo_actividad, datosFormulario.tiempo_aproximado, sedeTienePabellones, mostrarCamposIncidencia, debugValidacion, opciones]);
+
+  const validarFormulario = () => {
+    const camposObligatorios = ['sede', 'tipo_actividad', 'tiempo_aproximado'];
+    
+    // Solo requerir pabellón si la sede tiene pabellones
+    if (sedeTienePabellones) {
+      camposObligatorios.push('pabellon');
+    }
+    
+    if (mostrarCamposIncidencia) {
+      camposObligatorios.push('ambiente_incidencia', 'tipo_incidencia', 'equipo_afectado');
+    }
+
+    return camposObligatorios.every(campo => datosFormulario[campo as keyof FormularioData]);
+  };
 
   const obtenerOpcionesEquipo = () => {
     if (!opciones || !datosFormulario.tipo_incidencia) return [];
