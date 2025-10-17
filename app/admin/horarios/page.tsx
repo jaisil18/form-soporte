@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Save, Clock, AlertCircle } from 'lucide-react';
 import { getHorarioConfiguracion, setHorarioConfiguracion } from '@/lib/supabase';
 import { validarHorarioEstatico } from '@/lib/validarHorario';

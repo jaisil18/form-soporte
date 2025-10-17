@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { 
   Download, 
   Filter, 
@@ -86,7 +85,7 @@ export default function ReportesPage() {
 
   const handleExportarEstadisticas = () => {
     if (estadisticas) {
-      exportarEstadisticasExcel(estadisticas);
+      exportarEstadisticasExcel(estadisticas as Record<string, unknown>);
     }
   };
 

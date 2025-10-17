@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { getOpcionesFormulario } from '@/lib/supabase';
 import type { UsuarioSoporte, FormularioData, OpcionesFormulario } from '@/types';
@@ -123,7 +123,7 @@ export default function Paso2DetallesIncidencia({
   };
 
   // Función separada para logging de debug (solo cuando sea necesario)
-  const debugValidacion = () => {
+  const debugValidacion = useCallback(() => {
     const camposObligatorios = ['sede', 'tipo_actividad', 'tiempo_aproximado'];
     
     if (sedeTienePabellones) {
@@ -152,7 +152,7 @@ export default function Paso2DetallesIncidencia({
     } else {
       console.log('✅ Todos los campos obligatorios están llenos');
     }
-  };
+  }, [datosFormulario, sedeTienePabellones, mostrarCamposIncidencia, usuario]);
 
   const obtenerOpcionesEquipo = () => {
     if (!opciones || !datosFormulario.tipo_incidencia) return [];
