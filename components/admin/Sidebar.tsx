@@ -75,7 +75,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       descripcion: 'Vista principal con gráficos y estadísticas'
     },
     {
-      titulo: 'Reportes y Estadísticas',
+      titulo: 'Reportes',
       ruta: '/admin/reportes',
       icono: FileText,
       descripcion: 'Ver gráficos, tablas y análisis'
@@ -109,10 +109,8 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const navegarA = (ruta: string) => {
     router.push(ruta);
     
-    // Cerrar sidebar en móvil después de navegar
-    if (isMobile || isTablet) {
-      onToggle();
-    }
+    // Cerrar sidebar después de navegar
+    onToggle();
   };
 
   const isActive = (ruta: string) => {
@@ -125,7 +123,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   return (
     <>
       {/* Overlay para móvil */}
-      {(isMobile || isTablet) && isOpen && (
+      {isOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onToggle}
@@ -158,14 +156,12 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           </div>
           
           {/* Botón cerrar en móvil */}
-          {(isMobile || isTablet) && (
-            <button
-              onClick={onToggle}
-              className="p-1 rounded-md hover:bg-gray-100 lg:hidden"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          )}
+          <button
+            onClick={onToggle}
+            className="p-1 rounded-md hover:bg-gray-100 lg:hidden"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
         </div>
 
         {/* Navegación principal */}

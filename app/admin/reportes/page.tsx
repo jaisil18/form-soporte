@@ -2,27 +2,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  Download, 
-  Filter, 
-  BarChart3,
-  PieChart,
-  Users,
-  Clock,
   Search,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { getIncidencias, getEstadisticasReporte } from '@/lib/supabase';
-import { exportarIncidenciasExcel, exportarEstadisticasExcel } from '@/lib/exportarExcel';
-import type { Incidencia, EstadisticasReporte, FiltrosReporte } from '@/types';
+import { getIncidencias } from '@/lib/supabase';
+import type { Incidencia } from '@/types';
 import { formatearFechaHora, obtenerColorPorTipoActividad, obtenerColorPorSede } from '@/lib/utils';
 
 export default function ReportesPage() {
   const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
-  const [estadisticas, setEstadisticas] = useState<EstadisticasReporte | null>(null);
-  const [filtros, setFiltros] = useState<FiltrosReporte>({});
   const [cargando, setCargando] = useState(true);
-  const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [paginaActual, setPaginaActual] = useState(1);
   const [elementosPorPagina] = useState(10);
@@ -30,19 +20,14 @@ export default function ReportesPage() {
   const cargarDatos = useCallback(async () => {
     try {
       setCargando(true);
-      const [incidenciasData, estadisticasData] = await Promise.all([
-        getIncidencias(filtros),
-        getEstadisticasReporte(filtros)
-      ]);
-      
+      const incidenciasData = await getIncidencias({});
       setIncidencias(incidenciasData);
-      setEstadisticas(estadisticasData);
     } catch (error) {
       console.error('Error al cargar datos:', error);
     } finally {
       setCargando(false);
     }
-  }, [filtros]);
+  }, []);
 
   useEffect(() => {
     cargarDatos();
@@ -79,15 +64,6 @@ export default function ReportesPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleExportarIncidencias = () => {
-    exportarIncidenciasExcel(incidencias);
-  };
-
-  const handleExportarEstadisticas = () => {
-    if (estadisticas) {
-      exportarEstadisticasExcel(estadisticas as unknown as Record<string, unknown>);
-    }
-  };
 
 
   if (cargando) {
@@ -104,181 +80,15 @@ export default function ReportesPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {/* Título de la página */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reportes y Estadísticas</h1>
-            <p className="text-gray-600 mt-2">Análisis de incidencias registradas</p>
-          </div>
-          
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => setMostrarFiltros(!mostrarFiltros)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                mostrarFiltros 
-                  ? 'bg-blue-100 text-blue-700' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <Filter className="h-4 w-4" />
-              <span className="text-sm">Filtros</span>
-            </button>
-            
-            <button
-              onClick={handleExportarEstadisticas}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              <span className="text-sm">Exportar Estadísticas</span>
-            </button>
-            
-            <button
-              onClick={handleExportarIncidencias}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              <span className="text-sm">Exportar Datos</span>
-            </button>
-          </div>
+      <div className="mb-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Reportes</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Análisis de incidencias registradas</p>
         </div>
       </div>
 
-      {/* Filtros */}
-      {mostrarFiltros && (
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha Desde
-              </label>
-              <input
-                type="date"
-                value={filtros.fecha_desde || ''}
-                onChange={(e) => setFiltros({...filtros, fecha_desde: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha Hasta
-              </label>
-              <input
-                type="date"
-                value={filtros.fecha_hasta || ''}
-                onChange={(e) => setFiltros({...filtros, fecha_hasta: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Sede
-              </label>
-              <select
-                value={filtros.sede || ''}
-                onChange={(e) => setFiltros({...filtros, sede: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Todas las sedes</option>
-                <option value="Moche">Moche</option>
-                <option value="Trujillo">Trujillo</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de Actividad
-              </label>
-              <select
-                value={filtros.tipo_actividad || ''}
-                onChange={(e) => setFiltros({...filtros, tipo_actividad: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Todos los tipos</option>
-                <option value="Incidencia">Incidencia</option>
-                <option value="Solicitud">Solicitud</option>
-                <option value="Visita técnica/campo">Visita técnica/campo</option>
-                <option value="Soporte evento">Soporte evento</option>
-              </select>
-            </div>
-          </div>
-          
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={() => setFiltros({})}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              Limpiar Filtros
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Estadísticas resumidas */}
-      {estadisticas && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-500 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Incidencias</p>
-                <p className="text-2xl font-bold text-gray-900">{estadisticas.total_incidencias}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-500 rounded-lg">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Sedes Activas</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {Object.keys(estadisticas.incidencias_por_sede).length}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-500 rounded-lg">
-                <PieChart className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Tipos de Actividad</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {Object.keys(estadisticas.tipos_actividad).length}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-orange-500 rounded-lg">
-                <Clock className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Tiempo Promedio</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {Object.values(estadisticas.tiempo_promedio).length > 0 
-                    ? `${Math.round(Object.values(estadisticas.tiempo_promedio).reduce((a, b) => a + b, 0) / Object.values(estadisticas.tiempo_promedio).length)}m`
-                    : '0m'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Búsqueda */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
@@ -286,26 +96,29 @@ export default function ReportesPage() {
             placeholder="Buscar incidencias..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
           />
         </div>
       </div>
 
       {/* Paginación Superior */}
       {incidenciasFiltradas.length > 0 && totalPaginas > 1 && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border border-gray-200 sm:px-6 rounded-lg shadow mb-4">
+        <div className="bg-white px-3 sm:px-4 lg:px-6 py-3 flex items-center justify-between border border-gray-200 rounded-lg shadow mb-4">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() => cambiarPagina(paginaActual - 1)}
               disabled={paginaActual === 1}
-              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Anterior
             </button>
+            <div className="flex items-center text-xs sm:text-sm text-gray-700">
+              Página {paginaActual} de {totalPaginas}
+            </div>
             <button
               onClick={() => cambiarPagina(paginaActual + 1)}
               disabled={paginaActual === totalPaginas}
-              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Siguiente
             </button>
@@ -386,94 +199,103 @@ export default function ReportesPage() {
         </div>
       )}
 
-      {/* Tabla de incidencias */}
+      {/* Lista de incidencias - Responsive */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Usuario
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sede
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pabellón
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tipo
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fecha
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tiempo
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {incidenciasPaginadas.map((incidencia) => (
-                <tr key={incidencia.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+        {incidenciasFiltradas.length === 0 ? (
+          <div className="text-center py-12">
+            <Search className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No hay incidencias</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {busqueda ? 'No se encontraron resultados para la búsqueda.' : 'No hay incidencias registradas.'}
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {incidenciasPaginadas.map((incidencia) => (
+              <div key={incidencia.id} className="p-4 sm:p-6 hover:bg-gray-50">
+                {/* Vista móvil */}
+                <div className="sm:hidden">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {incidencia.usuario_nombre || 'Usuario desconocido'}
+                      </div>
+                      <div className="text-sm text-gray-500 truncate">
+                        {incidencia.usuario_email}
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-shrink-0">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${obtenerColorPorSede(incidencia.sede)}`}>
+                        {incidencia.sede}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm text-gray-900">{incidencia.pabellon}</span>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full w-fit ${obtenerColorPorTipoActividad(incidencia.tipo_actividad)}`}>
+                        {incidencia.tipo_actividad}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-900">{incidencia.tiempo_aproximado}</div>
+                      <div className="text-xs text-gray-500">{formatearFechaHora(incidencia.fecha_hora)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vista desktop */}
+                <div className="hidden sm:grid sm:grid-cols-6 sm:gap-4">
+                  <div className="col-span-2">
                     <div className="text-sm font-medium text-gray-900">
                       {incidencia.usuario_nombre || 'Usuario desconocido'}
                     </div>
                     <div className="text-sm text-gray-500">
                       {incidencia.usuario_email}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  </div>
+                  <div className="col-span-1">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${obtenerColorPorSede(incidencia.sede)}`}>
                       {incidencia.sede}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  </div>
+                  <div className="col-span-1 text-sm text-gray-900">
                     {incidencia.pabellon}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  </div>
+                  <div className="col-span-1">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${obtenerColorPorTipoActividad(incidencia.tipo_actividad)}`}>
                       {incidencia.tipo_actividad}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatearFechaHora(incidencia.fecha_hora)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {incidencia.tiempo_aproximado}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {incidenciasFiltradas.length === 0 && (
-          <div className="text-center py-12">
-            <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No hay incidencias</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {busqueda ? 'No se encontraron resultados para la búsqueda.' : 'No hay incidencias que coincidan con los filtros aplicados.'}
-            </p>
+                  </div>
+                  <div className="col-span-1 text-right">
+                    <div className="text-sm text-gray-900">{incidencia.tiempo_aproximado}</div>
+                    <div className="text-xs text-gray-500">{formatearFechaHora(incidencia.fecha_hora)}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
 
       {/* Paginación */}
       {incidenciasFiltradas.length > 0 && totalPaginas > 1 && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow mt-4">
+        <div className="bg-white px-3 sm:px-4 lg:px-6 py-3 flex items-center justify-between border border-gray-200 rounded-lg shadow mt-4">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() => cambiarPagina(paginaActual - 1)}
               disabled={paginaActual === 1}
-              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Anterior
             </button>
+            <div className="flex items-center text-xs sm:text-sm text-gray-700">
+              Página {paginaActual} de {totalPaginas}
+            </div>
             <button
               onClick={() => cambiarPagina(paginaActual + 1)}
               disabled={paginaActual === totalPaginas}
-              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Siguiente
             </button>
