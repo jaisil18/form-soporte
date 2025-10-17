@@ -417,6 +417,27 @@ export const getEstadisticasReporte = async (filtros?: FiltrosReporte): Promise<
     tiempo_promedio[actividad] = Math.round(promedio * 10) / 10;
   });
   
+  // Incidencias por usuario
+  const incidencias_por_usuario = incidencias.reduce((acc, incidencia) => {
+    const nombre = incidencia.usuario_nombre || incidencia.usuario_email || 'Usuario desconocido';
+    acc[nombre] = (acc[nombre] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // Incidencias por pabellón
+  const incidencias_por_pabellon = incidencias.reduce((acc, incidencia) => {
+    acc[incidencia.pabellon] = (acc[incidencia.pabellon] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // Lugares más concurridos (ambientes)
+  const lugares_mas_concurridos = incidencias
+    .filter(i => i.ambiente_incidencia)
+    .reduce((acc, incidencia) => {
+      acc[incidencia.ambiente_incidencia!] = (acc[incidencia.ambiente_incidencia!] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  
   // Tendencia temporal (últimos 30 días)
   const tendencia_temporal = [];
   const hoy = new Date();
@@ -442,6 +463,37 @@ export const getEstadisticasReporte = async (filtros?: FiltrosReporte): Promise<
     tipos_actividad,
     equipos_mas_afectados,
     tiempo_promedio,
-    tendencia_temporal
+    tendencia_temporal,
+    incidencias_por_usuario,
+    incidencias_por_pabellon,
+    lugares_mas_concurridos
   };
+};
+
+// Función para obtener estadísticas con filtros temporales específicos
+export const getEstadisticasConFiltroTemporal = async (periodo: 'mes' | 'trimestre' | 'año'): Promise<EstadisticasReporte> => {
+  const hoy = new Date();
+  let fechaDesde: Date;
+  
+  switch (periodo) {
+    case 'mes':
+      fechaDesde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      break;
+    case 'trimestre':
+      const trimestreActual = Math.floor(hoy.getMonth() / 3);
+      fechaDesde = new Date(hoy.getFullYear(), trimestreActual * 3, 1);
+      break;
+    case 'año':
+      fechaDesde = new Date(hoy.getFullYear(), 0, 1);
+      break;
+    default:
+      fechaDesde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  }
+  
+  const filtros: FiltrosReporte = {
+    fecha_desde: fechaDesde.toISOString().split('T')[0],
+    fecha_hasta: hoy.toISOString().split('T')[0]
+  };
+  
+  return await getEstadisticasReporte(filtros);
 };

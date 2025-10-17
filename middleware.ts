@@ -68,7 +68,7 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Verificar si la ruta es del panel de administración
+  // Solo verificar autenticación para rutas protegidas del admin
   if (request.nextUrl.pathname.startsWith('/admin')) {
     // Permitir acceso a la página de login
     if (request.nextUrl.pathname === '/admin/login') {
@@ -82,7 +82,8 @@ export async function middleware(request: NextRequest) {
       // Primero intentar obtener la sesión
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionError) {
+      // Ignorar errores de refresh token - son normales cuando no hay sesión
+      if (sessionError && sessionError.message !== 'Invalid Refresh Token: Refresh Token Not Found') {
         console.log('❌ Middleware: Error al obtener sesión:', sessionError.message);
       }
       
@@ -94,7 +95,8 @@ export async function middleware(request: NextRequest) {
       // Si no hay sesión, intentar obtener el usuario directamente
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      if (userError) {
+      // Ignorar errores de refresh token - son normales cuando no hay sesión
+      if (userError && userError.message !== 'Invalid Refresh Token: Refresh Token Not Found') {
         console.log('❌ Middleware: Error al obtener usuario:', userError.message);
       }
       
@@ -108,7 +110,14 @@ export async function middleware(request: NextRequest) {
 
       console.log('✅ Middleware: Usuario autenticado (usuario):', user.email);
       
-    } catch (error) {
+    } catch (error: any) {
+      // Ignorar errores específicos de refresh token
+      if (error?.message?.includes('Refresh Token Not Found')) {
+        console.log('🔄 Middleware: Token de refresh no encontrado, redirigiendo al login');
+        const redirectUrl = new URL('/admin/login', request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+      
       console.error('❌ Error en middleware de autenticación:', error);
       const redirectUrl = new URL('/admin/login', request.url);
       return NextResponse.redirect(redirectUrl);

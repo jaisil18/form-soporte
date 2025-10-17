@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  ArrowLeft, 
   Save, 
   Edit,
   Users,
@@ -108,61 +107,48 @@ export default function UsuariosPage() {
 
   if (cargando) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando usuarios...</p>
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando usuarios...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/admin')}
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5" />
-                <span className="font-medium">Volver al Dashboard</span>
-              </button>
-              
-              <div className="h-6 w-px bg-gray-300"></div>
-              
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Gestión de Usuarios</h1>
-                <p className="text-sm text-gray-600">Administrar usuarios de soporte</p>
-              </div>
-            </div>
+    <div className="p-4 sm:p-6 lg:p-8">
+      {/* Título de la página */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
+            <p className="text-gray-600 mt-2">Administrar usuarios de soporte</p>
+          </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => router.push('/admin/usuarios/administradores')}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-              >
-                <Shield className="h-4 w-4" />
-                <span>Administradores</span>
-              </button>
-              
-              <button
-                onClick={() => setMostrarFormulario(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <UserPlus className="h-4 w-4" />
-                <span>Nuevo Usuario</span>
-              </button>
-            </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => router.push('/admin/usuarios/administradores')}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+            >
+              <Shield className="h-4 w-4" />
+              <span className="text-sm">Administradores</span>
+            </button>
+            
+            <button
+              onClick={() => setMostrarFormulario(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span className="text-sm">Nuevo Usuario</span>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Lista de usuarios */}
           <div className="lg:col-span-2">
@@ -348,6 +334,5 @@ export default function UsuariosPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }

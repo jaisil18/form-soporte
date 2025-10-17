@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Clock, Users, Settings } from 'lucide-react';
 import { validarHorario } from '@/lib/validarHorario';
 import FormularioIncidencias from '@/components/FormularioIncidencias';
+import FormularioMultiPaso from '@/components/FormularioMultiPaso';
 import type { ResultadoValidacionHorario } from '@/lib/validarHorario';
 
 export default function HomePage() {
   const router = useRouter();
   const [validacionHorario, setValidacionHorario] = useState<ResultadoValidacionHorario | null>(null);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [usarFormularioMultiPaso, setUsarFormularioMultiPaso] = useState(true);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -55,7 +57,11 @@ export default function HomePage() {
   }
 
   if (mostrarFormulario) {
-    return <FormularioIncidencias onVolver={() => setMostrarFormulario(false)} />;
+    return usarFormularioMultiPaso ? (
+      <FormularioMultiPaso onVolver={() => setMostrarFormulario(false)} />
+    ) : (
+      <FormularioIncidencias onVolver={() => setMostrarFormulario(false)} />
+    );
   }
 
   return (
@@ -75,18 +81,12 @@ export default function HomePage() {
         <div className="flex items-center justify-center pt-8 pb-4">
           {/* Logo UCT */}
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center">
-              <div className="relative w-10 h-10">
-                {/* Cruz estilizada */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-1 h-8 bg-blue-500"></div>
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-8 h-1 bg-yellow-400"></div>
-                </div>
-                {/* Diamante */}
-                <div className="absolute inset-0 border-2 border-blue-600 transform rotate-45"></div>
-              </div>
+            <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center p-2">
+              <img 
+                src="/isologo_uct.png" 
+                alt="Logo UCT" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="text-white">
               <h1 className="text-4xl font-bold tracking-wider">UCT</h1>
@@ -131,6 +131,33 @@ export default function HomePage() {
               </p>
             </div>
 
+            {/* Selector de tipo de formulario */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Selecciona el tipo de formulario:</h3>
+              <div className="flex items-center justify-center gap-6">
+                <button
+                  onClick={() => setUsarFormularioMultiPaso(true)}
+                  className={`px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                    usarFormularioMultiPaso
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25 border-2 border-blue-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  ✨ Multi-Paso
+                </button>
+                <button
+                  onClick={() => setUsarFormularioMultiPaso(false)}
+                  className={`px-6 py-3 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                    !usarFormularioMultiPaso
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25 border-2 border-blue-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  📋 Clásico
+                </button>
+              </div>
+            </div>
+
             {/* Botón de acción */}
             {validacionHorario?.esValido ? (
               <button
@@ -163,10 +190,10 @@ export default function HomePage() {
       {/* Footer */}
       <div className="text-center text-white/80 py-4">
         <p className="text-sm">
-          Sistema de Registro de Incidencias - Universidad Católica de Trujillo
+          Sistema de Registro de Incidencias - Kinnova
         </p>
         <p className="text-xs mt-1">
-          © 2024 UCT. Todos los derechos reservados.
+          © 2025 UCT. Todos los derechos reservados.
         </p>
       </div>
     </div>

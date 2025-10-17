@@ -95,4 +95,8 @@ export interface EstadisticasReporte {
     fecha: string;
     cantidad: number;
   }>;
+  // Nuevos campos para gráficos
+  incidencias_por_usuario?: Record<string, number>;
+  incidencias_por_pabellon?: Record<string, number>;
+  lugares_mas_concurridos?: Record<string, number>;
 }
