@@ -89,6 +89,7 @@ export interface EstadisticasReporte {
   total_incidencias: number;
   incidencias_por_sede: Record<string, number>;
   tipos_actividad: Record<string, number>;
+  tipos_incidencia: Record<string, number>;
   equipos_mas_afectados: Record<string, number>;
   tiempo_promedio: Record<string, number>;
   tendencia_temporal: Array<{

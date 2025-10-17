@@ -5,7 +5,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { 
   LayoutDashboard,
-  BarChart3,
   FileText,
   Settings,
   Users,
@@ -73,13 +72,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       titulo: 'Dashboard',
       ruta: '/admin',
       icono: LayoutDashboard,
-      descripcion: 'Vista principal con gráficos'
-    },
-    {
-      titulo: 'Gráficos',
-      ruta: '/admin#graficos',
-      icono: BarChart3,
-      descripcion: 'Análisis visual de datos'
+      descripcion: 'Vista principal con gráficos y estadísticas'
     },
     {
       titulo: 'Reportes y Estadísticas',
@@ -114,18 +107,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   ];
 
   const navegarA = (ruta: string) => {
-    if (ruta === '/admin#graficos') {
-      // Scroll a la sección de gráficos
-      router.push('/admin');
-      setTimeout(() => {
-        const element = document.getElementById('graficos');
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    } else {
-      router.push(ruta);
-    }
+    router.push(ruta);
     
     // Cerrar sidebar en móvil después de navegar
     if (isMobile || isTablet) {

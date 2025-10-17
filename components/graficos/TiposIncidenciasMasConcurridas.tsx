@@ -8,17 +8,18 @@ import { useResponsive } from '@/hooks/useResponsive';
 // Importación dinámica para evitar problemas de SSR
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-interface TiposIncidenciasMasConcurridasProps {
+interface TiposActividadesMasConcurridasProps {
   estadisticas: EstadisticasReporte | null;
+  periodo?: 'mes' | 'trimestre' | 'año';
 }
 
-export default function TiposIncidenciasMasConcurridas({ estadisticas }: TiposIncidenciasMasConcurridasProps) {
+export default function TiposActividadesMasConcurridas({ estadisticas }: TiposActividadesMasConcurridasProps) {
   const { isMobile, isTablet } = useResponsive();
   
   if (!estadisticas?.tipos_actividad) {
     return (
       <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Tipos de Incidencias Más Concurridas</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Tipos de Actividades Más Concurridas</h3>
         <div className="flex items-center justify-center h-48 sm:h-64 text-gray-500">
           No hay datos disponibles
         </div>
@@ -26,24 +27,23 @@ export default function TiposIncidenciasMasConcurridas({ estadisticas }: TiposIn
     );
   }
 
-  // Filtrar solo incidencias (no actividades como "Solicitud")
-  const incidencias = Object.entries(estadisticas.tipos_actividad)
-    .filter(([tipo]) => tipo.toLowerCase().includes('incidencia'))
+  // Mostrar todos los tipos de actividades
+  const actividades = Object.entries(estadisticas.tipos_actividad)
     .sort(([, a], [, b]) => b - a);
 
-  if (incidencias.length === 0) {
+  if (actividades.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Tipos de Incidencias Más Concurridas</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Tipos de Actividades Más Concurridas</h3>
         <div className="flex items-center justify-center h-48 sm:h-64 text-gray-500">
-          No hay incidencias registradas
+          No hay actividades registradas
         </div>
       </div>
     );
   }
 
-  const series = incidencias.map(([, cantidad]) => cantidad);
-  const labels = incidencias.map(([tipo]) => tipo);
+  const series = actividades.map(([, cantidad]) => cantidad);
+  const labels = actividades.map(([tipo]) => tipo);
 
   const options = {
     chart: {
@@ -83,7 +83,7 @@ export default function TiposIncidenciasMasConcurridas({ estadisticas }: TiposIn
         formatter: (value: number) => {
           const total = series.reduce((a, b) => a + b, 0);
           const porcentaje = ((value / total) * 100).toFixed(1);
-          return `${value} incidencias (${porcentaje}%)`;
+          return `${value} actividades (${porcentaje}%)`;
         }
       }
     }
@@ -92,8 +92,8 @@ export default function TiposIncidenciasMasConcurridas({ estadisticas }: TiposIn
   return (
     <div className="bg-white rounded-lg shadow p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Tipos de Incidencias Más Concurridas</h3>
-        <span className="text-sm text-gray-500">Solo incidencias</span>
+        <h3 className="text-lg font-semibold text-gray-900">Tipos de Actividades Más Concurridas</h3>
+        <span className="text-sm text-gray-500">Todas las actividades</span>
       </div>
       <Chart options={options} series={series} type="pie" height={isMobile ? 300 : isTablet ? 320 : 350} />
     </div>

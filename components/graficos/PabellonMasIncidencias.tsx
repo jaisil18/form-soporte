@@ -10,6 +10,7 @@ const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 interface PabellonMasIncidenciasProps {
   estadisticas: EstadisticasReporte | null;
+  periodo?: 'mes' | 'trimestre' | 'año';
 }
 
 export default function PabellonMasIncidencias({ estadisticas }: PabellonMasIncidenciasProps) {
