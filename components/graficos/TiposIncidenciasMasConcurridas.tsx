@@ -80,7 +80,7 @@ export default function TiposIncidenciasMasConcurridas({ estadisticas }: TiposIn
     tooltip: {
       theme: 'light' as const,
       y: {
-        formatter: (value: number, { seriesIndex }: any) => {
+        formatter: (value: number) => {
           const total = series.reduce((a, b) => a + b, 0);
           const porcentaje = ((value / total) * 100).toFixed(1);
           return `${value} incidencias (${porcentaje}%)`;

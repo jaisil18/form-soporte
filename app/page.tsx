@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Clock, Users, Settings } from 'lucide-react';
 import { validarHorario } from '@/lib/validarHorario';
 import FormularioIncidencias from '@/components/FormularioIncidencias';
@@ -82,10 +83,12 @@ export default function HomePage() {
           {/* Logo UCT */}
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center p-2">
-              <img 
+              <Image 
                 src="/isologo_uct.png" 
                 alt="Logo UCT" 
-                className="w-full h-full object-contain"
+                width={48}
+                height={48}
+                className="object-contain"
               />
             </div>
             <div className="text-white">
@@ -190,7 +193,7 @@ export default function HomePage() {
       {/* Footer */}
       <div className="text-center text-white/80 py-4">
         <p className="text-sm">
-          Sistema de Registro de Incidencias - Kinnova
+          Sistema de Registro de Incidencias - Kinnova: Experiencias digitales que conectan
         </p>
         <p className="text-xs mt-1">
           © 2025 UCT. Todos los derechos reservados.

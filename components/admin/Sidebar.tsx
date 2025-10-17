@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { 
   LayoutDashboard,
   BarChart3,
@@ -10,9 +11,7 @@ import {
   Users,
   Clock,
   Download,
-  Home,
   LogOut,
-  Menu,
   X,
   ChevronRight
 } from 'lucide-react';
@@ -162,10 +161,12 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1">
-              <img 
+              <Image 
                 src="/isologo_uct.png" 
                 alt="Logo UCT" 
-                className="w-full h-full object-contain"
+                width={24}
+                height={24}
+                className="object-contain"
               />
             </div>
             <div>

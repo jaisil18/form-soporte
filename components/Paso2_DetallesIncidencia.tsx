@@ -105,7 +105,7 @@ export default function Paso2DetallesIncidencia({
     if (opciones) { // Solo debug cuando las opciones estén cargadas
       debugValidacion();
     }
-  }, [datosFormulario.sede, datosFormulario.tipo_actividad, datosFormulario.tiempo_aproximado, sedeTienePabellones, mostrarCamposIncidencia]);
+  }, [datosFormulario.sede, datosFormulario.tipo_actividad, datosFormulario.tiempo_aproximado, sedeTienePabellones, mostrarCamposIncidencia, debugValidacion, opciones]);
 
   const validarFormulario = () => {
     const camposObligatorios = ['sede', 'tipo_actividad', 'tiempo_aproximado'];

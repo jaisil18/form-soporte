@@ -17,7 +17,6 @@ import { getOpcionesFormulario, updateOpcionesFormulario } from '@/lib/supabase'
 import type { OpcionesFormulario } from '@/types';
 
 export default function ConfiguracionPage() {
-  const router = useRouter();
   const [opciones, setOpciones] = useState<OpcionesFormulario | null>(null);
   const [opcionesEditadas, setOpcionesEditadas] = useState<OpcionesFormulario | null>(null);
   const [cargando, setCargando] = useState(true);

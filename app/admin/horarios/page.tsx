@@ -8,7 +8,6 @@ import { validarHorarioEstatico } from '@/lib/validarHorario';
 import type { HorarioConfiguracion } from '@/types';
 
 export default function HorariosPage() {
-  const router = useRouter();
   const [horario, setHorario] = useState<HorarioConfiguracion>({
     habilitado: true,
     hora_inicio: 7,

@@ -16,7 +16,6 @@ import { exportarComoCSV } from '@/lib/utils';
 import type { FiltrosReporte } from '@/types';
 
 export default function ExportacionPage() {
-  const router = useRouter();
   const [filtros, setFiltros] = useState<FiltrosReporte>({});
   const [cargando, setCargando] = useState(false);
   const [tipoExportacion, setTipoExportacion] = useState<'incidencias' | 'estadisticas' | 'csv'>('incidencias');

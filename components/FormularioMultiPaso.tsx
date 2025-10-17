@@ -14,7 +14,7 @@ interface Paso {
   id: string;
   titulo: string;
   pregunta: string;
-  icono: React.ComponentType<any>;
+  icono: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   campo: keyof FormularioData;
   esObligatorio: boolean;
   tipoInput?: 'dropdown' | 'botones';

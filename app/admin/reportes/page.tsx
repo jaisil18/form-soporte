@@ -19,7 +19,6 @@ import type { Incidencia, EstadisticasReporte, FiltrosReporte } from '@/types';
 import { formatearFechaHora, obtenerColorPorTipoActividad, obtenerColorPorSede } from '@/lib/utils';
 
 export default function ReportesPage() {
-  const router = useRouter();
   const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
   const [estadisticas, setEstadisticas] = useState<EstadisticasReporte | null>(null);
   const [filtros, setFiltros] = useState<FiltrosReporte>({});

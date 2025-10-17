@@ -69,7 +69,7 @@ export default function TiempoPromedioSolucion({ estadisticas }: TiempoPromedioS
     },
     dataLabels: {
       enabled: true,
-      formatter: (val: number, opts: any) => {
+      formatter: (val: number, opts: { w: { config: { labels: string[] } }; seriesIndex: number }) => {
         const label = opts.w.config.labels[opts.seriesIndex];
         return `${label}: ${val.toFixed(1)} min`;
       }

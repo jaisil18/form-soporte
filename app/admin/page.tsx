@@ -6,8 +6,7 @@ import {
   Activity,
   FileText
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase-client';
-import { getEstadisticasReporte, getEstadisticasConFiltroTemporal } from '@/lib/supabase';
+import { getEstadisticasConFiltroTemporal } from '@/lib/supabase';
 import type { EstadisticasReporte } from '@/types';
 import ReporteTemporal from '@/components/graficos/ReporteTemporal';
 import IncidenciasPorUsuario from '@/components/graficos/IncidenciasPorUsuario';
@@ -19,7 +18,6 @@ import ChartSkeleton from '@/components/ui/ChartSkeleton';
 import { useResponsive } from '@/hooks/useResponsive';
 
 export default function AdminDashboard() {
-  const router = useRouter();
   const { isMobile, isTablet, isDesktop } = useResponsive();
   const [estadisticas, setEstadisticas] = useState<EstadisticasReporte | null>(null);
   const [cargando, setCargando] = useState(true);
