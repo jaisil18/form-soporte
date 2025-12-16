@@ -126,8 +126,6 @@ Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 ## 📞 Soporte
 
 - **Desarrollador**: Jaisil Azabache Calderón
-- **Email**: jaisil.azabache@uct.edu.pe
-- **Institución**: Universidad César Vallejo
 
 ## 🏆 Características Destacadas
 
