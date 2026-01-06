@@ -57,6 +57,15 @@ export const updateUsuarioSoporte = async (id: string, updates: Partial<UsuarioS
 };
 
 // Funciones para incidencias
+export const deleteUsuarioSoporte = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('usuarios_soporte')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+};
+
 export const createIncidencia = async (incidencia: FormularioData): Promise<Incidencia> => {
   console.log('🔧 createIncidencia: Iniciando creación de incidencia');
   console.log('🔧 createIncidencia: Datos recibidos:', incidencia);
