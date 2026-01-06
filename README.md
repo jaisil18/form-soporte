@@ -1,6 +1,6 @@
 # 📋 Formulario de Registro de Incidencias - UCT
 
-Sistema completo de gestión de incidencias tecnológicas para la Universidad César Vallejo, desarrollado con Next.js y Supabase.
+Sistema completo de gestión de incidencias tecnológicas, desarrollado con Next.js y Supabase.
 
 ## ✨ Características
 
@@ -126,8 +126,6 @@ Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 ## 📞 Soporte
 
 - **Desarrollador**: Jaisil Azabache Calderón
-- **Email**: jaisil.azabache@uct.edu.pe
-- **Institución**: Universidad César Vallejo
 
 ## 🏆 Características Destacadas
 
