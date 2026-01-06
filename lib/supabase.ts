@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import type { 
-  UsuarioSoporte, 
-  Incidencia, 
+import type {
+  UsuarioSoporte,
+  Incidencia,
   FormularioData,
   HorarioConfiguracion,
   OpcionesFormulario,
@@ -44,23 +44,23 @@ export const createUsuarioSoporte = async (usuario: Omit<UsuarioSoporte, 'id' | 
   return data;
 };
 
-export const updateUsuarioSoporte = async (id: string, updates: Partial<UsuarioSoporte>): Promise<UsuarioSoporte> => {
+export const updateUsuarioSoporte = async (id: string, updates: Partial<UsuarioSoporte>): Promise<UsuarioSoporte | null> => {
   const { data, error } = await supabase
     .from('usuarios_soporte')
     .update(updates)
     .eq('id', id)
     .select()
-    .single();
+    .select();
 
   if (error) throw error;
-  return data;
+  return data && data[0] ? data[0] : null;
 };
 
 // Funciones para incidencias
 export const createIncidencia = async (incidencia: FormularioData): Promise<Incidencia> => {
   console.log('🔧 createIncidencia: Iniciando creación de incidencia');
   console.log('🔧 createIncidencia: Datos recibidos:', incidencia);
-  
+
   try {
     const datosInsertar = {
       usuario_id: incidencia.usuario_id,
@@ -238,7 +238,7 @@ export const createUsuarioAdmin = async (datos: {
 }): Promise<UsuarioAdmin> => {
   console.log('🔧 createUsuarioAdmin: Iniciando creación de usuario admin');
   console.log('🔧 createUsuarioAdmin: Datos recibidos:', datos);
-  
+
   try {
     // Crear solo el registro en nuestra tabla personalizada
     // El usuario deberá registrarse manualmente en Supabase Auth o usar el método alternativo
@@ -337,7 +337,7 @@ export const updatePasswordAdmin = async (email: string): Promise<void> => {
     .eq('email', email);
 
   if (error) throw error;
-  
+
   // Nota: Para cambiar la contraseña real, el usuario debe:
   // 1. Ir a Supabase Dashboard > Authentication > Users
   // 2. Buscar su email y hacer clic en "Reset Password"
@@ -375,32 +375,32 @@ export const activarUsuarioAdmin = async (id: string): Promise<UsuarioAdmin> => 
 };
 
 export const updateOpcionesFormulario = async (opciones: Partial<OpcionesFormulario>): Promise<void> => {
-  const promises = Object.entries(opciones).map(([clave, valor]) => 
+  const promises = Object.entries(opciones).map(([clave, valor]) =>
     setConfiguracion(clave, valor, `Configuración de ${clave} para el formulario`)
   );
-  
+
   await Promise.all(promises);
 };
 
 // Funciones para estadísticas y reportes
 export const getEstadisticasReporte = async (filtros?: FiltrosReporte): Promise<EstadisticasReporte> => {
   const incidencias = await getIncidencias(filtros);
-  
+
   // Estadísticas básicas
   const total_incidencias = incidencias.length;
-  
+
   // Incidencias por sede
   const incidencias_por_sede = incidencias.reduce((acc, incidencia) => {
     acc[incidencia.sede] = (acc[incidencia.sede] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  
+
   // Tipos de actividad
   const tipos_actividad = incidencias.reduce((acc, incidencia) => {
     acc[incidencia.tipo_actividad] = (acc[incidencia.tipo_actividad] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  
+
   // Tipos de incidencia (solo para actividades de tipo "Incidencia")
   const tipos_incidencia = incidencias
     .filter(i => i.tipo_actividad === 'Incidencia')
@@ -409,7 +409,7 @@ export const getEstadisticasReporte = async (filtros?: FiltrosReporte): Promise<
       acc[tipo] = (acc[tipo] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-  
+
   // Equipos más afectados
   const equipos_mas_afectados = incidencias
     .filter(i => i.equipo_afectado)
@@ -417,45 +417,45 @@ export const getEstadisticasReporte = async (filtros?: FiltrosReporte): Promise<
       acc[incidencia.equipo_afectado!] = (acc[incidencia.equipo_afectado!] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-  
+
   // Tiempo promedio por actividad
   const tiempo_promedio: Record<string, number> = {};
   const tiempos_numericos: Record<string, number[]> = {};
-  
+
   incidencias.forEach(incidencia => {
     const tiempo = incidencia.tiempo_aproximado;
     let minutos = 0;
-    
+
     if (tiempo.includes('5 minutos')) minutos = 5;
     else if (tiempo.includes('10 minutos')) minutos = 10;
     else if (tiempo.includes('15 minutos')) minutos = 15;
     else if (tiempo.includes('20 minutos')) minutos = 20;
     else if (tiempo.includes('Mayor a 20 minutos')) minutos = 30; // Estimación
-    
+
     if (!tiempos_numericos[incidencia.tipo_actividad]) {
       tiempos_numericos[incidencia.tipo_actividad] = [];
     }
     tiempos_numericos[incidencia.tipo_actividad].push(minutos);
   });
-  
+
   Object.entries(tiempos_numericos).forEach(([actividad, tiempos]) => {
     const promedio = tiempos.reduce((a, b) => a + b, 0) / tiempos.length;
     tiempo_promedio[actividad] = Math.round(promedio * 10) / 10;
   });
-  
+
   // Incidencias por usuario
   const incidencias_por_usuario = incidencias.reduce((acc, incidencia) => {
     const nombre = incidencia.usuario_nombre || incidencia.usuario_email || 'Usuario desconocido';
     acc[nombre] = (acc[nombre] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  
+
   // Incidencias por pabellón
   const incidencias_por_pabellon = incidencias.reduce((acc, incidencia) => {
     acc[incidencia.pabellon] = (acc[incidencia.pabellon] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  
+
   // Lugares más concurridos (ambientes)
   const lugares_mas_concurridos = incidencias
     .filter(i => i.ambiente_incidencia)
@@ -463,26 +463,26 @@ export const getEstadisticasReporte = async (filtros?: FiltrosReporte): Promise<
       acc[incidencia.ambiente_incidencia!] = (acc[incidencia.ambiente_incidencia!] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-  
+
   // Tendencia temporal (últimos 30 días)
   const tendencia_temporal = [];
   const hoy = new Date();
-  
+
   for (let i = 29; i >= 0; i--) {
     const fecha = new Date(hoy);
     fecha.setDate(fecha.getDate() - i);
     const fechaStr = fecha.toISOString().split('T')[0];
-    
-    const cantidad = incidencias.filter(incidencia => 
+
+    const cantidad = incidencias.filter(incidencia =>
       incidencia.fecha_hora.startsWith(fechaStr)
     ).length;
-    
+
     tendencia_temporal.push({
       fecha: fechaStr,
       cantidad
     });
   }
-  
+
   return {
     total_incidencias,
     incidencias_por_sede,
@@ -509,7 +509,7 @@ export const getEstadisticasConFiltroTemporal = async (
   const hoy = new Date();
   let fechaDesde: Date;
   let fechaHasta: Date;
-  
+
   // Si no hay filtros específicos, usar el comportamiento anterior
   if (!filtrosEspecificos) {
     switch (periodo) {
@@ -535,7 +535,7 @@ export const getEstadisticasConFiltroTemporal = async (
     const año = filtrosEspecificos.año === 'todos' ? hoy.getFullYear() : filtrosEspecificos.año || hoy.getFullYear();
     const trimestre = filtrosEspecificos.trimestre === 'todos' ? null : filtrosEspecificos.trimestre;
     const mes = filtrosEspecificos.mes === 'todos' ? null : filtrosEspecificos.mes;
-    
+
     if (mes !== null && mes !== undefined) {
       // Filtro por mes específico
       fechaDesde = new Date(año, mes - 1, 1);
@@ -552,18 +552,18 @@ export const getEstadisticasConFiltroTemporal = async (
       fechaHasta = new Date(año, 11, 31);
     }
   }
-  
+
   const filtros: FiltrosReporte = {
     fecha_desde: fechaDesde.toISOString().split('T')[0],
     fecha_hasta: fechaHasta.toISOString().split('T')[0]
   };
-  
+
   console.log('🔍 getEstadisticasConFiltroTemporal:', {
     periodo,
     filtrosEspecificos,
     fechaDesde: filtros.fecha_desde,
     fechaHasta: filtros.fecha_hasta
   });
-  
+
   return await getEstadisticasReporte(filtros);
 };
