@@ -33,6 +33,19 @@ export async function GET(request: Request) {
 
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
+            // Check if it's a recovery flow (checking type param or if next was intended for update)
+            const type = searchParams.get('type');
+
+            // Prioritize explicit next, then checks for recovery type
+            if (next && next !== '/') {
+                return NextResponse.redirect(`${origin}${next}`)
+            }
+
+            if (type === 'recovery') {
+                return NextResponse.redirect(`${origin}/admin/update-password`)
+            }
+
+            // Default fallback
             return NextResponse.redirect(`${origin}${next}`)
         }
     }
