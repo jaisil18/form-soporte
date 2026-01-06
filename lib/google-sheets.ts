@@ -18,17 +18,16 @@ export const saveToGoogleSheets = async (data: FormularioData): Promise<void> =>
                 'Content-Type': 'text/plain;charset=utf-8',
             },
             body: JSON.stringify({
-                fecha_hora: data.fecha_hora,
+                usuario_nombre: data.usuario_nombre || 'Anónimo',
                 sede: data.sede,
                 pabellon: data.pabellon,
                 tipo_actividad: data.tipo_actividad,
-                usuario_nombre: data.usuario_nombre || 'Anónimo',
-                usuario_email: data.usuario_email || '',
                 ambiente_incidencia: data.ambiente_incidencia,
                 tipo_incidencia: data.tipo_incidencia,
                 equipo_afectado: data.equipo_afectado,
                 tiempo_aproximado: data.tiempo_aproximado,
-                estado: 'pendiente'
+                // La fecha la genera el script, pero enviamos todo por si acaso
+                usuario_email: data.usuario_email
             }),
         });
 

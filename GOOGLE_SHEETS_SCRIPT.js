@@ -1,37 +1,42 @@
 function doPost(e) {
-    // 1. Obtener la hoja activa
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    // 1. Obtener la hoja llamada "Reporte"
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("Reporte");
+
+    // Si no existe, usar la primera hoja o crearla
+    if (!sheet) {
+        sheet = ss.getSheets()[0];
+        // Opcional: sheet.setName("Reporte");
+    }
 
     try {
         // 2. Parsear los datos recibidos (JSON)
         var data = JSON.parse(e.postData.contents);
 
-        // 3. Insertar fila con el orden exacto de columnas
-        // Asegúrate de que tus encabezados en Sheets coincidan con este orden:
-        // A: Fecha/Hora | B: Sede | C: Pabellón | D: Actividad | E: Nombre | F: Email | G: Ambiente | H: Tipo Incidencia | I: Equipo | J: Tiempo | K: Estado
+        // 3. Obtener fecha actual de Perú
+        var fechaPeru = Utilities.formatDate(new Date(), "GMT-5", "dd/MM/yyyy HH:mm:ss");
 
+        // 4. Insertar fila en el orden solicitado
+        // Orden: Nombre | Sede | Pabellón | Actividad | Ambiente | Incidencia | Equipo | Tiempo | Fecha
         sheet.appendRow([
-            data.fecha_hora,           // Columna A
-            data.sede,                 // Columna B
-            data.pabellon || "",       // Columna C (puede ser null)
-            data.tipo_actividad,       // Columna D
-            data.usuario_nombre,       // Columna E
-            data.usuario_email,        // Columna F
-            data.ambiente_incidencia || "", // Columna G
-            data.tipo_incidencia || "",     // Columna H
-            data.equipo_afectado || "",     // Columna I
-            data.tiempo_aproximado,    // Columna J
-            data.estado || "pendiente" // Columna K
+            data.usuario_nombre || "Anónimo",
+            data.sede,
+            data.pabellon || "",
+            data.tipo_actividad,
+            data.ambiente_incidencia || "",
+            data.tipo_incidencia || "",
+            data.equipo_afectado || "",
+            data.tiempo_aproximado,
+            fechaPeru // Usamos la fecha generada aquí, no la del cliente
         ]);
 
-        // 4. Devolver respuesta exitosa
+        // 5. Devolver respuesta exitosa
         return ContentService.createTextOutput(JSON.stringify({
             "result": "success",
-            "message": "Fila insertada correctamente"
+            "message": "Fila insertada correctamente en Reporte"
         })).setMimeType(ContentService.MimeType.JSON);
 
     } catch (error) {
-        // Manejo de errores
         return ContentService.createTextOutput(JSON.stringify({
             "result": "error",
             "message": error.toString()
