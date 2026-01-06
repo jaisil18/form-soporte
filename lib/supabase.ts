@@ -58,9 +58,11 @@ export const updateUsuarioSoporte = async (id: string, updates: Partial<UsuarioS
 
 // Funciones para incidencias
 export const createIncidencia = async (incidencia: FormularioData): Promise<Incidencia> => {
-  const { data, error } = await supabase
-    .from('incidencias')
-    .insert({
+  console.log('🔧 createIncidencia: Iniciando creación de incidencia');
+  console.log('🔧 createIncidencia: Datos recibidos:', incidencia);
+  
+  try {
+    const datosInsertar = {
       usuario_id: incidencia.usuario_id,
       usuario_nombre: incidencia.usuario_nombre,
       usuario_email: incidencia.usuario_email,
@@ -74,12 +76,27 @@ export const createIncidencia = async (incidencia: FormularioData): Promise<Inci
       fecha_hora: incidencia.fecha_hora,
       estado: 'pendiente',
       prioridad: 'media'
-    })
-    .select()
-    .single();
+    };
 
-  if (error) throw error;
-  return data;
+    console.log('🔧 createIncidencia: Datos a insertar:', datosInsertar);
+
+    const { data, error } = await supabase
+      .from('incidencias')
+      .insert(datosInsertar)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ createIncidencia: Error de Supabase:', error);
+      throw new Error(`Error de base de datos: ${error.message}`);
+    }
+
+    console.log('✅ createIncidencia: Incidencia creada exitosamente:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ createIncidencia: Error general:', error);
+    throw error;
+  }
 };
 
 export const getIncidencias = async (filtros?: FiltrosReporte): Promise<Incidencia[]> => {

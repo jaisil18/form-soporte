@@ -131,27 +131,40 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
   const paso = pasos[pasoActual];
   const esUltimoPaso = pasoActual === pasos.length - 1;
 
+  // Debug: Mostrar información del paso actual
+  console.log(`🔍 Paso actual: ${pasoActual + 1}/${pasos.length} - ${paso.titulo} (${paso.campo})`);
+
   const obtenerOpciones = (campo: string) => {
     if (!opciones) return [];
-    
+
     switch (campo) {
       case 'usuario_id':
         return usuarios.map(usuario => usuario.nombre_completo);
       case 'sede':
         return opciones.sedes;
       case 'pabellon':
-        return datosFormulario.sede ? (opciones.pabellones[datosFormulario.sede] || []) : [];
+        // Depende de la sede seleccionada
+        if (datosFormulario.sede && opciones.pabellones[datosFormulario.sede]) {
+          return opciones.pabellones[datosFormulario.sede];
+        }
+        return [];
       case 'tipo_actividad':
         return opciones.tipos_actividad;
       case 'ambiente_incidencia':
+        // Depende del pabellón seleccionado
         if (datosFormulario.pabellon && opciones.ambientes[datosFormulario.pabellon]) {
           return opciones.ambientes[datosFormulario.pabellon];
         }
+        // Si no hay pabellón seleccionado, mostrar todas las opciones únicas
         return Object.values(opciones.ambientes).flat().filter((v, i, a) => a.indexOf(v) === i);
       case 'tipo_incidencia':
         return opciones.tipos_incidencia;
       case 'equipo_afectado':
-        return datosFormulario.tipo_incidencia ? (opciones.equipos[datosFormulario.tipo_incidencia] || []) : [];
+        // Depende del tipo de incidencia seleccionado
+        if (datosFormulario.tipo_incidencia && opciones.equipos[datosFormulario.tipo_incidencia]) {
+          return opciones.equipos[datosFormulario.tipo_incidencia];
+        }
+        return [];
       case 'tiempo_aproximado':
         return opciones.tiempos_aproximados;
       default:
@@ -166,21 +179,61 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
     return datosFormulario[campo as keyof FormularioData] || '';
   };
 
+  const limpiarDependencias = (campo: string, nuevoValor: string) => {
+    const dependencias: Record<string, string[]> = {
+      'sede': ['pabellon', 'ambiente_incidencia'],
+      'pabellon': ['ambiente_incidencia'],
+      'tipo_incidencia': ['equipo_afectado']
+    };
+
+    const camposALimpiar = dependencias[campo] || [];
+    const nuevosDatos: Partial<FormularioData> = { [campo]: nuevoValor };
+
+    // Limpiar campos dependientes
+    camposALimpiar.forEach(campoDependiente => {
+      nuevosDatos[campoDependiente as keyof FormularioData] = undefined;
+    });
+
+    return nuevosDatos;
+  };
+
   const handleSeleccionar = (valor: string) => {
+    let nuevosDatos: Partial<FormularioData> = {};
+
     if (paso.campo === 'usuario_id') {
       const usuario = usuarios.find(u => u.nombre_completo === valor);
       if (usuario) {
-        setDatosFormulario(prev => ({
-          ...prev,
+        nuevosDatos = {
           usuario_id: usuario.id,
           usuario_nombre: usuario.nombre_completo,
           usuario_email: usuario.email
-        }));
+        };
       }
     } else {
-      setDatosFormulario(prev => ({ ...prev, [paso.campo]: valor }));
+      // Limpiar dependencias antes de establecer el nuevo valor
+      nuevosDatos = limpiarDependencias(paso.campo, valor);
     }
+
+    console.log(`🔧 handleSeleccionar: Campo ${paso.campo}, Valor: ${valor}`);
+    console.log(`🔧 handleSeleccionar: Nuevos datos:`, nuevosDatos);
+    console.log(`🔧 handleSeleccionar: Paso actual: ${pasoActual + 1}, Es último: ${esUltimoPaso}`);
+
+    // Actualizar el estado
+    setDatosFormulario(prev => ({ ...prev, ...nuevosDatos }));
     setDropdownAbierto(null);
+
+    // Auto-avanzar después de un breve delay (excepto en el último paso)
+    setTimeout(() => {
+      console.log(`🔧 Auto-avance: Paso actual ${pasoActual + 1}, Es último: ${esUltimoPaso}`);
+      if (esUltimoPaso) {
+        console.log('🔧 Auto-avance: Último paso - NO enviar automáticamente');
+        // En el último paso, NO enviar automáticamente
+        // El usuario debe hacer clic en "Enviar Formulario" manualmente
+      } else {
+        console.log('🔧 Auto-avance: Avanzando al siguiente paso...');
+        setPasoActual(prev => prev + 1);
+      }
+    }, 300);
   };
 
   const puedeContinuar = () => {
@@ -208,6 +261,29 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
   const enviarFormulario = async () => {
     setCargando(true);
     try {
+      // Esperar un momento para asegurar que el estado se haya actualizado
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Validar que todos los campos obligatorios estén presentes
+      const camposObligatorios = [
+        'usuario_id', 'usuario_nombre', 'usuario_email',
+        'sede', 'tipo_actividad', 'tiempo_aproximado'
+      ];
+
+      console.log('🔍 Validando campos obligatorios...');
+      console.log('📋 Estado actual del formulario:', datosFormulario);
+
+      const camposFaltantes = camposObligatorios.filter(campo => {
+        const valor = datosFormulario[campo as keyof FormularioData];
+        console.log(`🔍 Campo ${campo}:`, valor);
+        return !valor || valor === '';
+      });
+
+      if (camposFaltantes.length > 0) {
+        console.error('❌ Campos faltantes:', camposFaltantes);
+        throw new Error(`Faltan campos obligatorios: ${camposFaltantes.join(', ')}`);
+      }
+
       const datosCompletos: FormularioData = {
         usuario_id: datosFormulario.usuario_id!,
         usuario_nombre: datosFormulario.usuario_nombre!,
@@ -222,11 +298,19 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
         fecha_hora: new Date().toISOString()
       };
 
-      await createIncidencia(datosCompletos);
+      console.log('📤 Enviando formulario con datos:', datosCompletos);
+
+      const resultado = await createIncidencia(datosCompletos);
+      console.log('✅ Formulario enviado exitosamente:', resultado);
+
       setEnviado(true);
     } catch (error) {
-      console.error('Error al enviar formulario:', error);
-      alert('Error al enviar el formulario. Por favor intente nuevamente.');
+      console.error('❌ Error al enviar formulario:', error);
+      console.error('📋 Datos del formulario:', datosFormulario);
+
+      // Mostrar mensaje de error más específico
+      const mensajeError = error instanceof Error ? error.message : 'Error desconocido al enviar el formulario';
+      alert(`Error al enviar el formulario: ${mensajeError}`);
     } finally {
       setCargando(false);
     }
@@ -237,20 +321,19 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
   if (enviado) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-400 via-green-500 to-green-600 flex items-center justify-center p-4">
-        <div className={`bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full transform transition-all duration-700 ${
-          animacionEntrada ? 'scale-110 opacity-0' : 'scale-100 opacity-100'
-        }`}>
+        <div className={`bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full transform transition-all duration-700 ${animacionEntrada ? 'scale-110 opacity-0' : 'scale-100 opacity-100'
+          }`}>
           <div className="text-center">
             <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-pulse">
               <Check className="h-10 w-10 text-green-600" />
             </div>
-            
+
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               ¡Formulario Enviado!
             </h2>
-            
+
             <p className="text-gray-600 mb-8 leading-relaxed">
-              Su incidencia ha sido registrada exitosamente. 
+              Su incidencia ha sido registrada exitosamente.
               El equipo de soporte revisará su solicitud a la brevedad.
             </p>
 
@@ -261,7 +344,7 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
               >
                 Volver al Inicio
               </button>
-              
+
               <button
                 onClick={() => {
                   setEnviado(false);
@@ -307,7 +390,7 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
               <ArrowLeft className="h-5 w-5" />
               <span className="font-medium">Volver</span>
             </button>
-            
+
             <div className="text-white text-right">
               <p className="text-sm opacity-80">Paso {pasoActual + 1} de {pasos.length}</p>
               <p className="font-semibold">{paso.titulo}</p>
@@ -316,7 +399,7 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
 
           {/* Barra de progreso animada */}
           <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
-            <div 
+            <div
               className="h-full bg-white rounded-full transition-all duration-700 ease-out"
               style={{ width: `${progreso}%` }}
             />
@@ -326,19 +409,18 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
 
       {/* Contenido principal */}
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className={`bg-white rounded-3xl shadow-2xl p-8 transform transition-all duration-500 ${
-          animacionEntrada ? 'translate-x-8 opacity-0' : 'translate-x-0 opacity-100'
-        }`}>
+        <div className={`bg-white rounded-3xl shadow-2xl p-8 transform transition-all duration-500 ${animacionEntrada ? 'translate-x-8 opacity-0' : 'translate-x-0 opacity-100'
+          }`}>
           {/* Icono y pregunta */}
           <div className="text-center mb-8">
             <div className="mx-auto w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
               <IconComponent className="h-10 w-10 text-blue-600" />
             </div>
-            
+
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               {paso.pregunta}
             </h2>
-            
+
             <p className="text-gray-600 text-lg">
               Selecciona una opción <span className="text-red-500 font-semibold">*</span>
             </p>
@@ -348,22 +430,20 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
           <div className="mb-8">
             {paso.tipoInput === 'botones' ? (
               /* Renderizado con botones */
-              <div className={`grid gap-3 ${
-                paso.campo === 'usuario_id' 
-                  ? 'grid-cols-1' 
+              <div className={`grid gap-3 ${paso.campo === 'usuario_id'
+                  ? 'grid-cols-1'
                   : 'grid-cols-1 sm:grid-cols-2'
-              }`}>
+                }`}>
                 {opcionesDisponibles.length > 0 ? (
                   opcionesDisponibles.map((opcion, index) => (
                     <button
                       key={index}
                       type="button"
                       onClick={() => handleSeleccionar(opcion)}
-                      className={`p-4 rounded-2xl border-2 font-semibold text-lg transition-all duration-200 transform hover:scale-105 ${
-                        valorActual === opcion
+                      className={`p-4 rounded-2xl border-2 font-semibold text-lg transition-all duration-200 transform hover:scale-105 ${valorActual === opcion
                           ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
                           : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50'
-                      }`}
+                        }`}
                     >
                       {paso.campo === 'usuario_id' ? (
                         <div className="flex items-center gap-3">
@@ -384,8 +464,42 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
                     </button>
                   ))
                 ) : (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    No hay opciones disponibles
+                  <div className="col-span-full text-center py-8">
+                    <div className="text-gray-500 mb-2">
+                      {paso.campo === 'pabellon' && !datosFormulario.sede ? (
+                        'Primero selecciona una sede'
+                      ) : paso.campo === 'ambiente_incidencia' && !datosFormulario.pabellon ? (
+                        'Primero selecciona un pabellón'
+                      ) : paso.campo === 'equipo_afectado' && !datosFormulario.tipo_incidencia ? (
+                        'Primero selecciona un tipo de incidencia'
+                      ) : (
+                        'No hay opciones disponibles'
+                      )}
+                    </div>
+                    {paso.campo === 'pabellon' && !datosFormulario.sede && (
+                      <button
+                        onClick={() => setPasoActual(1)}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        ← Volver a seleccionar sede
+                      </button>
+                    )}
+                    {paso.campo === 'ambiente_incidencia' && !datosFormulario.pabellon && (
+                      <button
+                        onClick={() => setPasoActual(2)}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        ← Volver a seleccionar pabellón
+                      </button>
+                    )}
+                    {paso.campo === 'equipo_afectado' && !datosFormulario.tipo_incidencia && (
+                      <button
+                        onClick={() => setPasoActual(5)}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        ← Volver a seleccionar tipo de incidencia
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -401,9 +515,8 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
                     <span className={`text-lg ${valorActual ? 'text-gray-900' : 'text-gray-500'}`}>
                       {valorActual || `Selecciona ${paso.titulo.toLowerCase()}`}
                     </span>
-                    <ChevronDown className={`h-6 w-6 text-gray-400 transition-transform duration-200 ${
-                      dropdownAbierto === paso.campo ? 'rotate-180' : ''
-                    }`} />
+                    <ChevronDown className={`h-6 w-6 text-gray-400 transition-transform duration-200 ${dropdownAbierto === paso.campo ? 'rotate-180' : ''
+                      }`} />
                   </div>
                 </button>
 
@@ -447,11 +560,10 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
             <button
               onClick={handleAnterior}
               disabled={pasoActual === 0}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                pasoActual === 0
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${pasoActual === 0
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700 hover:scale-105'
-              }`}
+                }`}
             >
               <ArrowLeft className="h-5 w-5" />
               Anterior
@@ -460,11 +572,10 @@ export default function FormularioMultiPaso({ onVolver }: FormularioMultiPasoPro
             <button
               onClick={handleSiguiente}
               disabled={!puedeContinuar() || cargando}
-              className={`flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                puedeContinuar() && !cargando
+              className={`flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all duration-200 ${puedeContinuar() && !cargando
                   ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl hover:scale-105'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
+                }`}
             >
               {cargando ? (
                 <>

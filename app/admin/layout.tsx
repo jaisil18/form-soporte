@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import Image from 'next/image';
 import Sidebar from '@/components/admin/Sidebar';
-import { useResponsive } from '@/hooks/useResponsive';
 
 export default function AdminLayout({
   children,
@@ -13,21 +12,31 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { isMobile, isTablet } = useResponsive();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoginPage, setIsLoginPage] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  // Detectar si estamos en la página de login usando useEffect para evitar hidratación
+  // Detectar si estamos en el cliente para evitar errores de hidratación
   useEffect(() => {
+    setIsClient(true);
     setIsLoginPage(pathname === '/admin/login');
   }, [pathname]);
 
   // Cerrar sidebar automáticamente en desktop
   useEffect(() => {
-    if (!isMobile && !isTablet) {
-      setSidebarOpen(false);
+    if (isClient) {
+      const handleResize = () => {
+        const width = window.innerWidth;
+        if (width >= 1024) {
+          setSidebarOpen(false);
+        }
+      };
+
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
     }
-  }, [isMobile, isTablet]);
+  }, [isClient]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -36,6 +45,18 @@ export default function AdminLayout({
   // Si estamos en la página de login, no mostrar el layout del admin
   if (isLoginPage) {
     return <>{children}</>;
+  }
+
+  // Evitar renderizado hasta que estemos en el cliente
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

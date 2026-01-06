@@ -70,56 +70,51 @@ export async function middleware(request: NextRequest) {
 
   // Solo verificar autenticación para rutas protegidas del admin
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    // Permitir acceso a la página de login
-    if (request.nextUrl.pathname === '/admin/login') {
+    // Permitir acceso a la página de login y sus subrutas (como forgot-password)
+    if (request.nextUrl.pathname.startsWith('/admin/login')) {
       return response;
     }
 
     try {
       // Verificar la sesión del usuario usando cookies
       console.log('🔍 Middleware: Verificando autenticación para:', request.nextUrl.pathname);
-      
-      // Primero intentar obtener la sesión
+
+      // Intentar obtener la sesión de manera más robusta
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      // Ignorar errores de refresh token - son normales cuando no hay sesión
-      if (sessionError && sessionError.message !== 'Invalid Refresh Token: Refresh Token Not Found') {
-        console.log('❌ Middleware: Error al obtener sesión:', sessionError.message);
-      }
-      
-      if (session?.user) {
+
+      // Si hay una sesión válida, permitir acceso
+      if (session?.user && !sessionError) {
         console.log('✅ Middleware: Usuario autenticado (sesión):', session.user.email);
         return response;
       }
-      
-      // Si no hay sesión, intentar obtener el usuario directamente
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      // Ignorar errores de refresh token - son normales cuando no hay sesión
-      if (userError && userError.message !== 'Invalid Refresh Token: Refresh Token Not Found') {
-        console.log('❌ Middleware: Error al obtener usuario:', userError.message);
-      }
-      
-      if (!user) {
-        console.log('❌ Middleware: No hay usuario autenticado, redirigiendo al login');
-        // Redirigir al login si no hay usuario autenticado
+
+      // Si hay error de refresh token, es normal - no hay sesión
+      if (sessionError?.message?.includes('Refresh Token Not Found')) {
+        console.log('🔄 Middleware: No hay sesión activa, redirigiendo al login');
         const redirectUrl = new URL('/admin/login', request.url);
         redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
         return NextResponse.redirect(redirectUrl);
       }
 
-      console.log('✅ Middleware: Usuario autenticado (usuario):', user.email);
-      
-    } catch (error: any) {
-      // Ignorar errores específicos de refresh token
-      if (error?.message?.includes('Refresh Token Not Found')) {
-        console.log('🔄 Middleware: Token de refresh no encontrado, redirigiendo al login');
+      // Si hay otros errores de sesión, también redirigir al login
+      if (sessionError) {
+        console.log('❌ Middleware: Error de sesión:', sessionError.message);
         const redirectUrl = new URL('/admin/login', request.url);
+        redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
         return NextResponse.redirect(redirectUrl);
       }
-      
-      console.error('❌ Error en middleware de autenticación:', error);
+
+      // Si no hay sesión, redirigir al login
+      console.log('❌ Middleware: No hay usuario autenticado, redirigiendo al login');
       const redirectUrl = new URL('/admin/login', request.url);
+      redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
+      return NextResponse.redirect(redirectUrl);
+
+    } catch (error: any) {
+      // Cualquier error en la autenticación debe redirigir al login
+      console.log('❌ Middleware: Error en autenticación:', error.message);
+      const redirectUrl = new URL('/admin/login', request.url);
+      redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
   }
