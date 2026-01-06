@@ -58,15 +58,14 @@ export const updateUsuarioSoporte = async (id: string, updates: Partial<UsuarioS
 
 // Funciones para incidencias
 export const deleteUsuarioSoporte = async (id: string): Promise<void> => {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('usuarios_soporte')
     .delete()
-    .eq('id', id)
-    .select();
+    .eq('id', id);
 
-  if (error) throw error;
-  if (!data || data.length === 0) {
-    throw new Error('No se pudo eliminar: El usuario no existe o no tienes permisos para eliminarlo.');
+  if (error) {
+    console.error('Error al eliminar usuario:', error);
+    throw error;
   }
 };
 
