@@ -7,8 +7,7 @@ import type { FormularioData } from '@/types';
  */
 export const saveToGoogleSheets = async (data: FormularioData): Promise<void> => {
     // URL de tu Script de Google Apps (Despliegue)
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNLm5Tsx-42rHXPt231_Y4nPPMI-EwXM4SLxsUugTlx7tpKxm_VEUsl08ctDwnfBDjJw/exec';
-
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZtnnUV9mv9JzbHF9yMzlD3swPr_R8zA0ea8yjji-B4H2gGFzN980LyCMI2g76AL7smQ/exec';
     try {
         // Es importante enviar como text/plain para evitar problemas de CORS con Google Scripts
         const response = await fetch(SCRIPT_URL, {
