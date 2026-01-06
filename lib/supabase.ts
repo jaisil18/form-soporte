@@ -10,6 +10,8 @@ import type {
   UsuarioAdmin
 } from '@/types';
 
+import { saveToGoogleSheets } from './google-sheets';
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://flmudobluiyzllvgrwhs.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsbXVkb2JsdWl5emxsdmdyd2hzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzNjEzMzcsImV4cCI6MjA3NTkzNzMzN30.UnoJlCpU4xZgFFCTmvEYHhf9AmIZ2WwgaoemWVjpT4o';
 
@@ -102,6 +104,9 @@ export const createIncidencia = async (incidencia: FormularioData): Promise<Inci
       console.error('❌ createIncidencia: Error de Supabase:', error);
       throw new Error(`Error de base de datos: ${error.message}`);
     }
+
+    // Tarea secundaria: Enviar a Google Sheets (sin esperar a que termine para no bloquear)
+    saveToGoogleSheets(incidencia).catch(err => console.error('Error background Google Sheets:', err));
 
     console.log('✅ createIncidencia: Incidencia creada exitosamente:', data);
     return data;

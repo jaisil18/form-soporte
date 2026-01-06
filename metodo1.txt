@@ -1,0 +1,68 @@
+Método 1: Usar Power Automate (La opción "Serverless" rápida)
+Microsoft tiene una herramienta nativa llamada Power Automate (antes Flow) que actúa como un servidor backend. Crea una URL segura (Webhook) que recibe tu JSON y lo inyecta en Excel.
+
+Ventajas: No manejas tokens de OAuth complejos, ni refresh_tokens. Microsoft maneja la seguridad. Requisito: Una cuenta de Microsoft 365 (escolar o empresarial) o personal.
+
+Pasos:
+Prepara tu Excel:
+
+Crea un archivo en OneDrive (ej: contactos.xlsx).
+
+Crea los encabezados (Nombre, Correo, Mensaje).
+
+IMPORTANTE: Selecciona los encabezados y una fila vacía y dale a "Dar formato como tabla". Power Automate solo escribe en Tablas, no en hojas sueltas.
+
+Crea el Flow en Power Automate:
+
+Ve a make.powerautomate.com.
+
+Crea un "Flujo de nube instantáneo".
+
+Disparador (Trigger): Busca "Cuando se recibe una solicitud HTTP".
+
+En el esquema JSON, pega un ejemplo de lo que enviará tu formulario:
+
+JSON
+
+{
+    "type": "object",
+    "properties": {
+        "nombre": { "type": "string" },
+        "email": { "type": "string" },
+        "mensaje": { "type": "string" }
+    }
+}
+Nuevo Paso (Action): Busca "Excel Online (Business)" o "Excel Online (OneDrive)".
+
+Acción: "Agregar una fila a una tabla".
+
+Selecciona tu archivo y mapea los campos del JSON a las columnas de Excel.
+
+Guarda y copia la URL HTTP POST que te generó el primer paso.
+
+Conecta tu Frontend (Vercel): En tu código donde antes llamabas a supabase.from('...').insert(), ahora harás un fetch a esa URL.
+
+JavaScript
+
+// Tu función de envío de formulario
+const enviarDatos = async (data) => {
+  const webhookUrl = "TU_URL_DE_POWER_AUTOMATE"; // Pon esto en tus .env
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        nombre: data.nombre,
+        email: data.email,
+        mensaje: data.mensaje
+      }),
+    });
+
+    if (response.ok) alert("Guardado en Excel exitosamente");
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
