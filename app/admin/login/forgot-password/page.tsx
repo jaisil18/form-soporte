@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
                 tipo: 'exito',
                 texto: 'Se ha enviado un correo con instrucciones para restablecer tu contraseña. Por favor revisa tu bandeja de entrada.'
             });
-        } catch (error: Error | any) {
+        } catch (error: unknown) {
             console.error('Error al solicitar reseteo:', error);
             setMensaje({
                 tipo: 'error',

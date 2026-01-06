@@ -42,7 +42,7 @@ export default function UpdatePasswordPage() {
             setTimeout(() => {
                 router.push('/admin/login');
             }, 2000);
-        } catch (error: Error | any) {
+        } catch (error: unknown) {
             console.error('Error al actualizar password:', error);
             setMensaje({
                 tipo: 'error',

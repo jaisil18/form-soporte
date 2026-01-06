@@ -15,7 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
-import { useResponsive } from '@/hooks/useResponsive';
+// import { useResponsive } from '@/hooks/useResponsive';
 
 interface SidebarProps {
   isOpen: boolean;
