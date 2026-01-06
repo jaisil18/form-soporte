@@ -27,11 +27,11 @@ export default function ForgotPasswordPage() {
                 tipo: 'exito',
                 texto: 'Se ha enviado un correo con instrucciones para restablecer tu contraseña. Por favor revisa tu bandeja de entrada.'
             });
-        } catch (error: any) {
+        } catch (error: Error | any) {
             console.error('Error al solicitar reseteo:', error);
             setMensaje({
                 tipo: 'error',
-                texto: error.message || 'Error al enviar la solicitud. Por favor intenta nuevamente.'
+                texto: (error as Error).message || 'Error al enviar la solicitud. Por favor intenta nuevamente.'
             });
         } finally {
             setCargando(false);
@@ -57,8 +57,8 @@ export default function ForgotPasswordPage() {
 
                 {mensaje && (
                     <div className={`mb-6 p-4 rounded-lg text-sm ${mensaje.tipo === 'exito'
-                            ? 'bg-green-50 text-green-800 border border-green-200'
-                            : 'bg-red-50 text-red-800 border border-red-200'
+                        ? 'bg-green-50 text-green-800 border border-green-200'
+                        : 'bg-red-50 text-red-800 border border-red-200'
                         }`}>
                         {mensaje.texto}
                     </div>
@@ -84,8 +84,8 @@ export default function ForgotPasswordPage() {
                         type="submit"
                         disabled={cargando || !email}
                         className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${cargando || !email
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-blue-900 hover:bg-blue-800 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-blue-900 hover:bg-blue-800 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
                             }`}
                     >
                         {cargando ? (

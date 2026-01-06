@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { 
+import {
   LayoutDashboard,
   FileText,
   Settings,
@@ -25,7 +25,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isMobile, isTablet } = useResponsive();
+  // const { isMobile, isTablet } = useResponsive();
   const [usuario, setUsuario] = useState<{ email?: string } | null>(null);
 
   useEffect(() => {
@@ -40,26 +40,26 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const handleLogout = async () => {
     try {
       const supabase = createClient();
-      
+
       // Cerrar sesión en Supabase
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         console.error('Error al cerrar sesión:', error);
       }
-      
+
       // Limpiar localStorage y sessionStorage
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Redirigir al login
       router.push('/admin/login');
-      
+
       // Forzar recarga de la página para limpiar completamente el estado
       setTimeout(() => {
         window.location.href = '/admin/login';
       }, 100);
-      
+
     } catch (error) {
       console.error('Error durante el logout:', error);
       // Redirigir de todas formas
@@ -108,7 +108,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
   const navegarA = (ruta: string) => {
     router.push(ruta);
-    
+
     // Cerrar sidebar después de navegar
     onToggle();
   };
@@ -124,7 +124,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     <>
       {/* Overlay para móvil */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onToggle}
         />
@@ -141,9 +141,9 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1">
-              <Image 
-                src="/isologo_uct.png" 
-                alt="Logo UCT" 
+              <Image
+                src="/isologo_uct.png"
+                alt="Logo UCT"
                 width={24}
                 height={24}
                 className="object-contain"
@@ -154,7 +154,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               <p className="text-xs text-gray-500">Sistema de Incidencias</p>
             </div>
           </div>
-          
+
           {/* Botón cerrar en móvil */}
           <button
             onClick={onToggle}
@@ -169,15 +169,15 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           {menuItems.map((item, index) => {
             const IconComponent = item.icono;
             const activo = isActive(item.ruta);
-            
+
             return (
               <button
                 key={index}
                 onClick={() => navegarA(item.ruta)}
                 className={`
                   w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200
-                  ${activo 
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' 
+                  ${activo
+                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }
                 `}
@@ -204,7 +204,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               <p className="text-xs text-gray-500">Conectado</p>
             </div>
           </div>
-          
+
           <button
             onClick={handleLogout}
             className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-200"
