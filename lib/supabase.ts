@@ -58,13 +58,13 @@ export const updateUsuarioSoporte = async (id: string, updates: Partial<UsuarioS
 
 // Funciones para incidencias
 export const deleteUsuarioSoporte = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('usuarios_soporte')
-    .delete()
-    .eq('id', id);
+  // Usamos RPC (Función de base de datos) para asegurar el borrado ignorando RLS
+  const { error } = await supabase.rpc('eliminar_usuario_soporte', {
+    id_usuario: id
+  });
 
   if (error) {
-    console.error('Error al eliminar usuario:', error);
+    console.error('Error al eliminar usuario (RPC):', error);
     throw error;
   }
 };
